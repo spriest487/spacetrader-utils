@@ -1,12 +1,12 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace PhoenixQuest
+namespace SpaceTrader.Util
 {
     public class WaitOrTimeout : IEnumerator
     {
-        public float StartedWaiting { get; }
-        public float Timeout { get; }
+        public float StartedWaiting { get; private set; }
+        public float Timeout { get; private set; }
         
         private readonly IEnumerator waitFor;
 
@@ -18,7 +18,7 @@ namespace PhoenixQuest
             this.waitFor = waitFor;
         }
 
-        public object Current => waitFor.Current;
+        public object Current { get { return waitFor.Current; } }
 
         public bool MoveNext()
         {

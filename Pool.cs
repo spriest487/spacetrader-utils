@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace PhoenixQuest
+namespace SpaceTrader.Util
 {
     public class Pool<T> where T : Component
     {

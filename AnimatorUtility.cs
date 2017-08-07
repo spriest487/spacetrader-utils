@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace PhoenixQuest
+namespace SpaceTrader.Util
 {
     public static class AnimatorUtility
     {
