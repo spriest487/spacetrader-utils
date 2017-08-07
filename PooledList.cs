@@ -120,9 +120,9 @@ public class PooledList<TItem, TData> : IEnumerable<TItem>
         int existingItemsCount = currentItems.Count;
         int newCount = currentData.Count;
 
-        if (existingItemsCount < newCount)
+        while (currentItems.Count > newCount)
         {
-            currentItems.Resize(newCount);
+            currentItems.RemoveAt(currentItems.Count - 1);
         }
 
         int itemIndex;
