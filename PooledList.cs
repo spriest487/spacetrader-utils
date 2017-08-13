@@ -9,7 +9,8 @@ namespace SpaceTrader.Util
     public class PooledList<TItem, TData> : IEnumerable<TItem>
         where TItem : MonoBehaviour
     {
-        public delegate void UpdateItemCallback(int index, TItem existing, TData source);
+        public delegate void UpdateItemCallback(TItem existing, TData source);
+        public delegate void UpdateItemIndexedCallback(int index, TItem existing, TData source);
 
         private TItem itemPrefab;
 
@@ -107,9 +108,26 @@ namespace SpaceTrader.Util
             }
         }
 
-        public bool Refresh(IEnumerable<TData> data, UpdateItemCallback onUpdateItem)
+        private void ResizeList<T>(List<T> list, int size)
         {
-            var newData = data.ToList();
+            while (list.Count > size)
+            {
+                list.RemoveAt(list.Count - 1);
+            }
+            while (list.Count < size)
+            {
+                list.Add(default(T));
+            }
+        }
+
+        public bool Refresh(IEnumerable<TData> dataItems, UpdateItemCallback onUpdateItem)
+        {
+            return Refresh(dataItems, (index, item, data) => onUpdateItem(item, data));
+        }
+
+        public bool Refresh(IEnumerable<TData> dataItems, UpdateItemIndexedCallback onUpdateItem)
+        {
+            var newData = dataItems.ToList();
 
             if (currentData != null && currentData.SequenceEqual(newData))
             {
@@ -122,10 +140,7 @@ namespace SpaceTrader.Util
             int existingItemsCount = currentItems.Count;
             int newCount = currentData.Count;
 
-            while (currentItems.Count > newCount)
-            {
-                currentItems.RemoveAt(currentItems.Count - 1);
-            }
+            ResizeList(currentItems, newCount);
 
             int itemIndex;
             for (itemIndex = 0; itemIndex < newCount; ++itemIndex)
