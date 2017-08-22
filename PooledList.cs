@@ -138,12 +138,12 @@ namespace SpaceTrader.Util
             currentData = newData;
 
             int existingItemsCount = currentItems.Count;
-            int newCount = currentData.Count;
+            int newCount = Mathf.Max(currentData.Count, existingItemsCount);
 
             ResizeList(currentItems, newCount);
 
             int itemIndex;
-            for (itemIndex = 0; itemIndex < newCount; ++itemIndex)
+            for (itemIndex = 0; itemIndex < currentData.Count; ++itemIndex)
             {
                 var dataValue = currentData[itemIndex];
 
