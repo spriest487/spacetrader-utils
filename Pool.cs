@@ -13,11 +13,25 @@ namespace SpaceTrader.Util
 
         public Pool(T prefab, Transform parent)
         {
+            Debug.Assert(!prefab.activeSelf, "source prefab for Pool shouldn't be active", prefab);
+        
             this.prefab = prefab;
             this.parent = parent;
 
             pooled = new List<T>();
             active = new List<T>();
+        }
+        
+        public void Reserve(int minSize)
+        {
+            var totalSize = pooled.Count + active.Count;
+            while (totalSize < minSize)
+            {
+                var newItem = Instantiate(prefab, parent);
+                Debug.Assert(!newItem.activeInHierarchy, "items instantiated during Reserve shouldn't be active", newItem);
+                pooled.Add(newItem);
+                ++totalSize;
+            }
         }
         
         public void Return(T item)
