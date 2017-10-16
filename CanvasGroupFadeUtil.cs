@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace SpacetraderUtils
+namespace SpaceTrader.Util
 {
     public static class CanvasGroupFadeUtil
     {
