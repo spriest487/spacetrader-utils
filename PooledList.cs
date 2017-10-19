@@ -131,6 +131,11 @@ namespace SpaceTrader.Util
 
             if (currentData != null && currentData.SequenceEqual(newData))
             {
+                for (int i = 0; i < currentData.Count; ++i)
+                {
+                    onUpdateItem(i, currentItems[i], currentData[i]);
+                }
+
                 //already up to date
                 return false;
             }
