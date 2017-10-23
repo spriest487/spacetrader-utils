@@ -11,9 +11,12 @@ namespace SpaceTrader.Util
             var switchers = Object.FindObjectsOfType<AspectRatioLayoutSwitcher>();
             foreach (var switcher in switchers)
             {
-                switcher.SendMessage("OnRectTransformDimensionsChange");
+                if (switcher.isActiveAndEnabled)
+                {
+                    switcher.SendMessage("OnRectTransformDimensionsChange");
 
-                Debug.Log($"refreshed layout of {switcher.name}", switcher);
+                    Debug.Log($"refreshed layout of {switcher.name}", switcher);
+                }
             }
         }
     }
