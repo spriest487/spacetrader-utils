@@ -1,45 +1,38 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
-namespace SpaceTrader.Util
-{
-    public class AspectRatioLayoutSwitcher : MonoBehaviour
-    {
+namespace SpaceTrader.Util {
+    public class AspectRatioLayoutSwitcher : MonoBehaviour {
+        [SerializeField]
+        private Transform tallRoot;
+
         [SerializeField]
         private Transform wideRoot;
 
-        [SerializeField]
-        private Transform tallRoot;
-        
         [ContextMenu("Refresh")]
-        private void OnRectTransformDimensionsChange()
-        {
+        private void OnRectTransformDimensionsChange() {
             /* find out which layout we should be in */
-            var rect = ((RectTransform)transform).rect;
+            var rect = ((RectTransform)this.transform).rect;
             var isWide = rect.width > rect.height;
 
             /* we have one root for the "tall" layout and one for the "wide"
              layout - only one of them should ever have children!*/
-            Debug.Assert(wideRoot.childCount == 0 || tallRoot.childCount == 0,
+            Debug.Assert(this.wideRoot.childCount == 0 || this.tallRoot.childCount == 0,
                 $"at least one of the layout roots in {nameof(AspectRatioLayoutSwitcher)} must be empty",
                 this);
 
-            if (wideRoot.childCount == 0 && isWide)
-            {
-                SwitchChildren(tallRoot, wideRoot);
-            }
-            else if (tallRoot.childCount == 0 && !isWide)
-            {
-                SwitchChildren(wideRoot, tallRoot);
+            if (this.wideRoot.childCount == 0 && isWide) {
+                this.SwitchChildren(this.tallRoot, this.wideRoot);
+            } else if (this.tallRoot.childCount == 0 && !isWide) {
+                this.SwitchChildren(this.wideRoot, this.tallRoot);
             }
         }
 
-        private void SwitchChildren(Transform from, Transform to)
-        {
+        private void SwitchChildren(Transform from, Transform to) {
 #if UNITY_EDITOR
-            UnityEditor.Undo.RecordObjects(new[] { from, to }, $"Refresh {nameof(AspectRatioLayoutSwitcher)}");
+            Undo.RecordObjects(new[] { from, to }, $"Refresh {nameof(AspectRatioLayoutSwitcher)}");
 #endif
-            for (int child = from.childCount; child > 0; --child)
-            {
+            for (var child = from.childCount; child > 0; --child) {
                 var childXform = from.GetChild(child - 1);
                 childXform.SetParent(to);
                 childXform.SetAsFirstSibling();

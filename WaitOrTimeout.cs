@@ -1,38 +1,32 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace SpaceTrader.Util
-{
-    public class WaitOrTimeout : IEnumerator
-    {
-        public float StartedWaiting { get; private set; }
-        public float Timeout { get; private set; }
-        
+namespace SpaceTrader.Util {
+    public class WaitOrTimeout : IEnumerator {
         private readonly IEnumerator waitFor;
 
-        public WaitOrTimeout(IEnumerator waitFor, float timeout)
-        {
-            StartedWaiting = Time.time;
-            Timeout = timeout;
+        public WaitOrTimeout(IEnumerator waitFor, float timeout) {
+            this.StartedWaiting = Time.time;
+            this.Timeout = timeout;
 
             this.waitFor = waitFor;
         }
 
-        public object Current { get { return waitFor.Current; } }
+        public float StartedWaiting { get; }
+        public float Timeout { get; }
 
-        public bool MoveNext()
-        {
-            if (Time.time > StartedWaiting + Timeout)
-            {
+        public object Current => this.waitFor.Current;
+
+        public bool MoveNext() {
+            if (Time.time > this.StartedWaiting + this.Timeout) {
                 return false;
             }
-            
-            return waitFor.MoveNext();
+
+            return this.waitFor.MoveNext();
         }
 
-        public void Reset()
-        {
-            waitFor.Reset();
+        public void Reset() {
+            this.waitFor.Reset();
         }
     }
 }

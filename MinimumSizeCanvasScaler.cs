@@ -1,62 +1,49 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace SpaceTrader.Util
-{
-    [ExecuteInEditMode]
-    [RequireComponent(typeof(CanvasScaler))]
-    public class MinimumSizeCanvasScaler : MonoBehaviour
-    {
-        [SerializeField]
-        private int minWidth = 1024;
+namespace SpaceTrader.Util {
+    [ExecuteInEditMode, RequireComponent(typeof(CanvasScaler))]
+    public class MinimumSizeCanvasScaler : MonoBehaviour {
+        private CanvasScaler canvasScaler;
 
         [SerializeField]
-        private int minHeight = 768;
+        private int maxHeight = 1080;
 
         [SerializeField]
         private int maxWidth = 1920;
 
         [SerializeField]
-        private int maxHeight = 1080;
+        private int minHeight = 768;
 
-        private CanvasScaler canvasScaler;
+        [SerializeField]
+        private int minWidth = 1024;
 
-        private void Start()
-        {
-            canvasScaler = GetComponent<CanvasScaler>();
+        private void Start() {
+            this.canvasScaler = this.GetComponent<CanvasScaler>();
         }
 
-        private void OnEnable()
-        {
-            Start();
-            Update();
+        private void OnEnable() {
+            this.Start();
+            this.Update();
         }
 
-        private void Update()
-        {
+        private void Update() {
             float scale;
-            if (Screen.height < minHeight || Screen.width < minWidth)
-            {
-                scale = Mathf.Min(Screen.height / (float)minHeight, Screen.width / (float)minWidth);
-            }
-            else if (Screen.height > maxHeight || Screen.width > maxWidth)
-            {
-                scale = Mathf.Max(Screen.height / (float)maxHeight, Screen.width / (float)maxWidth);
-            }
-            else
-            {
+            if (Screen.height < this.minHeight || Screen.width < this.minWidth) {
+                scale = Mathf.Min(Screen.height / (float)this.minHeight, Screen.width / (float)this.minWidth);
+            } else if (Screen.height > this.maxHeight || Screen.width > this.maxWidth) {
+                scale = Mathf.Max(Screen.height / (float)this.maxHeight, Screen.width / (float)this.maxWidth);
+            } else {
                 scale = 1;
             }
 
-            canvasScaler.scaleFactor = scale;
+            this.canvasScaler.scaleFactor = scale;
         }
 
 #if UNITY_EDITOR
-        private void OnGUI()
-        {
-            Update();
+        private void OnGUI() {
+            this.Update();
         }
 #endif
     }
-
 }

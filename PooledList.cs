@@ -1,200 +1,157 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#pragma warning disable 0649
+
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
-namespace SpaceTrader.Util
-{
-    public class PooledList<TItem, TData> : IEnumerable<TItem>
-        where TItem : MonoBehaviour
-    {
-        public delegate void UpdateItemCallback(TItem existing, TData source);
-        public delegate void UpdateItemIndexedCallback(int index, TItem existing, TData source);
+namespace SpaceTrader.Util {
+    [Serializable]
+    public abstract class PooledList<TData, TComponent, TSender> :
+        IReadOnlyList<TComponent>
+        where TComponent : Component {
+        [SerializeField]
+        private TComponent prefab;
 
-        private TItem itemPrefab;
+        public TComponent Prefab => prefab;
 
+        [SerializeField]
         private Transform root;
 
-        private List<TItem> currentItems;
-        private List<TData> currentData;
+        public Transform Root => root;
 
-        public int Count
-        {
-            get
-            {
-                if (currentItems == null)
-                {
-                    return 0;
-                }
+        [SerializeField, HideInInspector]
+        private List<TComponent> pool;
 
-                return currentItems.Where(i => i.isActiveAndEnabled).Count();
-            }
+        protected abstract void Initialize(
+            TData item,
+            TComponent component,
+            int index,
+            TSender sender
+        );
+
+        protected virtual TComponent Instantiate(TSender sender, Transform root) {
+            return Object.Instantiate(this.prefab, root);
         }
 
-        public int Capacity
-        {
-            get { return currentItems == null ? 0 : currentItems.Count; }
-            set
-            {
-                if (currentItems == null)
-                {
-                    currentItems = new List<TItem>(value);
-                }
-                else
-                {
-                    currentItems.Capacity = value;
-                }
+        public void CleanupRoot() {
+            if (!Application.isPlaying) {
+                Debug.LogAssertion("only call CleanupRoot in play mode");
+                return;
+            }
 
-                int diff = value - currentItems.Count;
-                for (int i = 0; i < diff; ++i)
-                {
-                    var item = UnityEngine.Object.Instantiate(itemPrefab);
-                    item.transform.SetParent(root);
-                    item.gameObject.SetActive(false);
+            var instances = root.GetComponentsInChildren<TComponent>();
+            foreach (var instance in instances) {
+                if (!pool.Contains(instance)) {
+                    Object.Destroy(instance.gameObject);
                 }
             }
         }
 
-        public TItem this[int index]
-        {
-            get { return currentItems == null ? null : currentItems[index]; }
-        }
-
-        public IEnumerable<TItem> Items
-        {
-            get { return currentItems != null ? currentItems : Enumerable.Empty<TItem>(); }
-        }
-
-        public IEnumerable<TData> Data
-        {
-            get { return currentData != null ? currentData : Enumerable.Empty<TData>(); }
-        }
-
-        public IEnumerable<KeyValuePair<TData, TItem>> Entries
-        {
-            get
-            {
-                for (int i = 0; i < currentData.Count; ++i)
-                {
-                    yield return new KeyValuePair<TData, TItem>(currentData[i], currentItems[i]);
-                }
-            }
-        }
-
-        public PooledList(Transform root, TItem itemPrefab)
-        {
-            Debug.Assert(root, "transform root of PooledList must exist");
-            Debug.Assert(itemPrefab, "item prefab of PooledList must exist");
-
-            currentItems = new List<TItem>(root.GetComponentsInChildren<TItem>());
-            currentData = null;
-            this.root = root;
-            this.itemPrefab = itemPrefab;
-        }
-
-        public bool Clear()
-        {
-            currentItems.ForEach(item => item.gameObject.SetActive(false));
-
-            if (currentData != null && currentData.Count > 0)
-            {
-                currentData.Clear();
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private void ResizeList<T>(List<T> list, int size)
-        {
-            while (list.Count > size)
-            {
-                list.RemoveAt(list.Count - 1);
-            }
-            while (list.Count < size)
-            {
-                list.Add(default(T));
-            }
-        }
-
-        public bool Refresh(IEnumerable<TData> dataItems, UpdateItemCallback onUpdateItem)
-        {
-            return Refresh(dataItems, (index, item, data) => onUpdateItem(item, data));
-        }
-
-        public bool Refresh(IEnumerable<TData> dataItems, UpdateItemIndexedCallback onUpdateItem)
-        {
-            var newData = dataItems.ToList();
-
-            if (currentData != null && currentData.SequenceEqual(newData))
-            {
-                for (int i = 0; i < currentData.Count; ++i)
-                {
-                    onUpdateItem(i, currentItems[i], currentData[i]);
+        public void Populate(
+            IEnumerable<TData> data,
+            TSender sender
+        ) {
+            var index = 0;
+            foreach (var item in data) {
+                TComponent component;
+                if (index < pool.Count) {
+                    component = pool[index];
+                } else {
+                    component = InstantiateElement(sender);
+                    pool.Add(component);
                 }
 
-                //already up to date
-                return false;
+                component.gameObject.SetActive(true);
+                Initialize(item, component, index, sender);
+
+                ++index;
             }
 
-            currentData = newData;
+            while (index < pool.Count) {
+                pool[index].gameObject.SetActive(false);
+                ++index;
+            }
+        }
 
-            int existingItemsCount = currentItems.Count;
-            int newCount = Mathf.Max(currentData.Count, existingItemsCount);
+        /// <summary>
+        /// Return all component instances to the pool
+        /// </summary>
+        public void Empty() {
+            foreach (var item in pool) {
+                item.gameObject.SetActive(false);
+            }
+        }
 
-            ResizeList(currentItems, newCount);
-
-            int itemIndex;
-            for (itemIndex = 0; itemIndex < currentData.Count; ++itemIndex)
-            {
-                var dataValue = currentData[itemIndex];
-
-                TItem item;
-                if (itemIndex >= existingItemsCount)
-                {
-                    item = currentItems[itemIndex] = UnityEngine.Object.Instantiate(itemPrefab, root, false);
-                }
-                else
-                {
-                    item = currentItems[itemIndex];
-                }
-
-                item.gameObject.SetActive(true);
-
-                if (onUpdateItem != null)
-                {
-                    onUpdateItem(itemIndex, item, dataValue);
+        /// <summary>
+        /// Empty the pool storage and destroy all component instances
+        /// </summary>
+        public void Clear() {
+            foreach (var item in pool) {
+                if (item) {
+                    if (Application.isPlaying) {
+                        Object.Destroy(item.gameObject);
+                    } else {
+                        Object.DestroyImmediate(item.gameObject);
+                    }
                 }
             }
 
-            //if there are less items than previously, deactivate any extras
-            while (itemIndex < existingItemsCount)
-            {
-                currentItems[itemIndex].gameObject.SetActive(false);
-                ++itemIndex;
-            }
-
-            return true;
+            pool.Clear();
         }
 
-        public IEnumerator<TItem> GetEnumerator()
-        {
-            if (currentItems != null)
-            {
-                return currentItems.GetEnumerator();
+        public TComponent Add(TData data, TSender sender) {
+            var index = pool.FindIndex(it => !it.gameObject.activeSelf);
+            TComponent component;
+            if (index < 0) {
+                component = InstantiateElement(sender);
+
+                pool.Add(component);
+                index = pool.Count - 1;
+            } else {
+                component = pool[index];
             }
-            else
-            {
-                return Enumerable.Empty<TItem>().GetEnumerator();
+
+            component.gameObject.SetActive(true);
+            Initialize(data, component, index, sender);
+
+            return component;
+        }
+
+        private TComponent InstantiateElement(TSender sender) {
+#if UNITY_EDITOR
+            if (!Application.isPlaying) {
+                var obj = (TComponent)UnityEditor.PrefabUtility.InstantiatePrefab(
+                    prefab
+                );
+                obj.transform.SetParent(root);
+                return obj;
+            }
+#endif
+
+            return Instantiate(sender, root);
+        }
+
+        public void Remove(TComponent item) {
+            pool.Single(it => it == item).gameObject.SetActive(false);
+        }
+
+        public void RemoveAll(Func<TComponent, bool> predicate) {
+            foreach (var removed in pool.Where(predicate)) {
+                removed.gameObject.SetActive(false);
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        public int IndexOf(TComponent component) => pool.IndexOf(component);
+
+        public IEnumerator<TComponent> GetEnumerator() => pool.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public TComponent this[int index] => pool[index];
+
+        public int Count => pool.Count;
     }
 }
