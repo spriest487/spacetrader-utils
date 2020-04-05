@@ -22,18 +22,21 @@ namespace SpaceTrader.Util {
 
             this.stack.Push(newState);
             newState.Enter(suspended);
+            newState.Restore(suspended);
 
-            this.StateChanged?.Invoke(new StateTransition<T>(suspended, newState));
+            this.StateChanged?.Invoke(new StateTransition<T>(suspended, newState, StateTransitionKind.Push));
         }
 
         public void Replace(T newState) {
             var replaced = this.stack.Count > 0 ? this.stack.Pop() : this.defaultState;
+            replaced.Suspend(newState);
             replaced.Exit(newState);
 
             this.stack.Push(newState);
             newState.Enter(replaced);
+            newState.Restore(replaced);
 
-            this.StateChanged?.Invoke(new StateTransition<T>(replaced, newState));
+            this.StateChanged?.Invoke(new StateTransition<T>(replaced, newState, StateTransitionKind.Replace));
         }
 
         public void Pop() {
@@ -45,10 +48,12 @@ namespace SpaceTrader.Util {
             var popped = this.stack.Pop();
             var restored = this.stack.Count > 0 ? this.stack.Peek() : this.defaultState;
 
+            popped.Suspend(restored);
             popped.Exit(restored);
+
             restored.Restore(popped);
 
-            this.StateChanged?.Invoke(new StateTransition<T>(popped, restored));
+            this.StateChanged?.Invoke(new StateTransition<T>(popped, restored, StateTransitionKind.Pop));
         }
 
         public void Reset(T newState) {
