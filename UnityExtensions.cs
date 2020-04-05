@@ -29,5 +29,17 @@ namespace SpaceTrader.Util {
             rect.yMax += distance.y;
             return rect;
         }
+
+        public static T GetOrAddComponent<T>(this Component component) where T : Component {
+            return GetOrAddComponent<T>(component.gameObject);
+        }
+
+        public static T GetOrAddComponent<T>(this GameObject obj) where T : Component {
+            if (!obj.TryGetComponent(out T newComponent)) {
+                newComponent = obj.AddComponent<T>();
+            }
+
+            return newComponent;
+        }
     }
 }

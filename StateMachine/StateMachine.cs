@@ -9,6 +9,7 @@ namespace SpaceTrader.Util {
 
         public T Current => this.stack.Count == 0 ? this.defaultState : this.stack.Peek();
 
+        public event Action<StateTransition<T>> BeforeStateChange;
         public event Action<StateTransition<T>> StateChanged;
 
         public StateMachine(T defaultState) {
@@ -18,17 +19,26 @@ namespace SpaceTrader.Util {
 
         public void Push(T newState) {
             var suspended = this.stack.Count > 0 ? this.stack.Peek() : this.defaultState;
+
+            var transition = new StateTransition<T>(suspended, newState, StateTransitionKind.Push);
+            this.BeforeStateChange?.Invoke(transition);
+
             suspended.Suspend(newState);
 
             this.stack.Push(newState);
             newState.Enter(suspended);
             newState.Restore(suspended);
 
-            this.StateChanged?.Invoke(new StateTransition<T>(suspended, newState, StateTransitionKind.Push));
+            this.StateChanged?.Invoke(transition);
         }
 
         public void Replace(T newState) {
             var replaced = this.stack.Count > 0 ? this.stack.Pop() : this.defaultState;
+
+            var transition = new StateTransition<T>(replaced, newState, StateTransitionKind.Replace);
+
+            this.BeforeStateChange?.Invoke(transition);
+
             replaced.Suspend(newState);
             replaced.Exit(newState);
 
@@ -36,7 +46,7 @@ namespace SpaceTrader.Util {
             newState.Enter(replaced);
             newState.Restore(replaced);
 
-            this.StateChanged?.Invoke(new StateTransition<T>(replaced, newState, StateTransitionKind.Replace));
+            this.StateChanged?.Invoke(transition);
         }
 
         public void Pop() {
@@ -48,12 +58,16 @@ namespace SpaceTrader.Util {
             var popped = this.stack.Pop();
             var restored = this.stack.Count > 0 ? this.stack.Peek() : this.defaultState;
 
+            var transition = new StateTransition<T>(popped, restored, StateTransitionKind.Pop);
+
+            this.BeforeStateChange?.Invoke(transition);
+
             popped.Suspend(restored);
             popped.Exit(restored);
 
             restored.Restore(popped);
 
-            this.StateChanged?.Invoke(new StateTransition<T>(popped, restored, StateTransitionKind.Pop));
+            this.StateChanged?.Invoke(transition);
         }
 
         public void Reset(T newState) {
