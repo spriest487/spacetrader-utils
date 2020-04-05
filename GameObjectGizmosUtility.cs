@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEditor;
 
 namespace SpaceTrader.Util {
     public static class GameObjectGizmosUtility {
-        public static void DrawWireMeshGizmos(this GameObject root,
+        public static void DrawWireMeshGizmos(
+            this GameObject root,
             Vector3 pos,
             Quaternion rot,
             Vector3? scale = default
@@ -17,7 +17,7 @@ namespace SpaceTrader.Util {
             Matrix4x4 xform
         ) {
             var origin = xform.MultiplyPoint(Vector3.zero);
-            
+
             if (root.TryGetComponent(out MeshFilter filter) && filter.sharedMesh) {
                 var subMeshCount = filter.sharedMesh.subMeshCount;
                 for (var sub = 0; sub < subMeshCount; ++sub) {
@@ -34,9 +34,9 @@ namespace SpaceTrader.Util {
                 var child = root.transform.GetChild(i);
                 var childXform = Matrix4x4.TRS(
                     child.localPosition,
-                    child.localRotation, 
+                    child.localRotation,
                     child.localScale);
-                
+
                 DrawWireMeshGizmos(child.gameObject, childXform);
             }
         }

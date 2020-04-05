@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -12,18 +13,30 @@ namespace SpaceTrader.Util {
     public abstract class PooledList<TData, TComponent, TSender> :
         IReadOnlyList<TComponent>
         where TComponent : Component {
+        [SerializeField, HideInInspector]
+        private List<TComponent> pool;
+
         [SerializeField]
         private TComponent prefab;
-
-        public TComponent Prefab => prefab;
 
         [SerializeField]
         private Transform root;
 
-        public Transform Root => root;
+        public TComponent Prefab => this.prefab;
 
-        [SerializeField, HideInInspector]
-        private List<TComponent> pool;
+        public Transform Root => this.root;
+
+        public IEnumerator<TComponent> GetEnumerator() {
+            return this.pool.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return this.GetEnumerator();
+        }
+
+        public TComponent this[int index] => this.pool[index];
+
+        public int Count => this.pool.Count;
 
         protected abstract void Initialize(
             TData item,
@@ -42,9 +55,9 @@ namespace SpaceTrader.Util {
                 return;
             }
 
-            var instances = root.GetComponentsInChildren<TComponent>();
+            var instances = this.root.GetComponentsInChildren<TComponent>();
             foreach (var instance in instances) {
-                if (!pool.Contains(instance)) {
+                if (!this.pool.Contains(instance)) {
                     Object.Destroy(instance.gameObject);
                 }
             }
@@ -57,39 +70,39 @@ namespace SpaceTrader.Util {
             var index = 0;
             foreach (var item in data) {
                 TComponent component;
-                if (index < pool.Count) {
-                    component = pool[index];
+                if (index < this.pool.Count) {
+                    component = this.pool[index];
                 } else {
-                    component = InstantiateElement(sender);
-                    pool.Add(component);
+                    component = this.InstantiateElement(sender);
+                    this.pool.Add(component);
                 }
 
                 component.gameObject.SetActive(true);
-                Initialize(item, component, index, sender);
+                this.Initialize(item, component, index, sender);
 
                 ++index;
             }
 
-            while (index < pool.Count) {
-                pool[index].gameObject.SetActive(false);
+            while (index < this.pool.Count) {
+                this.pool[index].gameObject.SetActive(false);
                 ++index;
             }
         }
 
         /// <summary>
-        /// Return all component instances to the pool
+        ///     Return all component instances to the pool
         /// </summary>
         public void Empty() {
-            foreach (var item in pool) {
+            foreach (var item in this.pool) {
                 item.gameObject.SetActive(false);
             }
         }
 
         /// <summary>
-        /// Empty the pool storage and destroy all component instances
+        ///     Empty the pool storage and destroy all component instances
         /// </summary>
         public void Clear() {
-            foreach (var item in pool) {
+            foreach (var item in this.pool) {
                 if (item) {
                     if (Application.isPlaying) {
                         Object.Destroy(item.gameObject);
@@ -99,23 +112,23 @@ namespace SpaceTrader.Util {
                 }
             }
 
-            pool.Clear();
+            this.pool.Clear();
         }
 
         public TComponent Add(TData data, TSender sender) {
-            var index = pool.FindIndex(it => !it.gameObject.activeSelf);
+            var index = this.pool.FindIndex(it => !it.gameObject.activeSelf);
             TComponent component;
             if (index < 0) {
-                component = InstantiateElement(sender);
+                component = this.InstantiateElement(sender);
 
-                pool.Add(component);
-                index = pool.Count - 1;
+                this.pool.Add(component);
+                index = this.pool.Count - 1;
             } else {
-                component = pool[index];
+                component = this.pool[index];
             }
 
             component.gameObject.SetActive(true);
-            Initialize(data, component, index, sender);
+            this.Initialize(data, component, index, sender);
 
             return component;
         }
@@ -123,35 +136,28 @@ namespace SpaceTrader.Util {
         private TComponent InstantiateElement(TSender sender) {
 #if UNITY_EDITOR
             if (!Application.isPlaying) {
-                var obj = (TComponent)UnityEditor.PrefabUtility.InstantiatePrefab(
-                    prefab
+                var obj = (TComponent)PrefabUtility.InstantiatePrefab(this.prefab
                 );
-                obj.transform.SetParent(root);
+                obj.transform.SetParent(this.root);
                 return obj;
             }
 #endif
 
-            return Instantiate(sender, root);
+            return this.Instantiate(sender, this.root);
         }
 
         public void Remove(TComponent item) {
-            pool.Single(it => it == item).gameObject.SetActive(false);
+            this.pool.Single(it => it == item).gameObject.SetActive(false);
         }
 
         public void RemoveAll(Func<TComponent, bool> predicate) {
-            foreach (var removed in pool.Where(predicate)) {
+            foreach (var removed in this.pool.Where(predicate)) {
                 removed.gameObject.SetActive(false);
             }
         }
 
-        public int IndexOf(TComponent component) => pool.IndexOf(component);
-
-        public IEnumerator<TComponent> GetEnumerator() => pool.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public TComponent this[int index] => pool[index];
-
-        public int Count => pool.Count;
+        public int IndexOf(TComponent component) {
+            return this.pool.IndexOf(component);
+        }
     }
 }

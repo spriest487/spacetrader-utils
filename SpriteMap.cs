@@ -15,58 +15,59 @@ namespace SpaceTrader.Util {
             public Sprite sprite;
         }
 
-        [SerializeField]
-        private Sprite defaultSprite;
-        public Sprite DefaultSprite => defaultSprite;
-
-        [SerializeField]
-        private Entry[] entries;
         public const string EntriesProperty = nameof(entries);
         public const string EntrySpriteProperty = nameof(Entry.sprite);
 
-        private IReadOnlyDictionary<string, Sprite> spritesByTag;
+        [SerializeField]
+        private Sprite defaultSprite;
 
-        public IEnumerable<string> Keys => spritesByTag.Keys;
-        public IEnumerable<Sprite> Values => spritesByTag.Values;
-        public int Count => spritesByTag.Count;
+        [SerializeField]
+        private Entry[] entries;
+
+        private IReadOnlyDictionary<string, Sprite> spritesByTag;
+        public Sprite DefaultSprite => this.defaultSprite;
+
+        public IEnumerable<string> Keys => this.spritesByTag.Keys;
+        public IEnumerable<Sprite> Values => this.spritesByTag.Values;
+        public int Count => this.spritesByTag.Count;
 
         public Sprite this[string key] {
             get {
-                if (TryGetValue(key, out var sprite)) {
+                if (this.TryGetValue(key, out var sprite)) {
                     return sprite;
-                } else {
-                    return defaultSprite;
                 }
-            }
-        }
 
-        private void OnEnable() {
-            if (entries != null) {
-                spritesByTag = entries.ToDictionary(e => e.tag, e => e.sprite);
-            } else {
-                spritesByTag = new Dictionary<string, Sprite>();
+                return this.defaultSprite;
             }
         }
 
         public bool ContainsKey(string key) {
-            return spritesByTag.ContainsKey(key);
+            return this.spritesByTag.ContainsKey(key);
         }
 
         public bool TryGetValue(string key, out Sprite value) {
             if (string.IsNullOrEmpty(key)) {
-                value = defaultSprite;
+                value = this.defaultSprite;
                 return true;
             }
 
-            return spritesByTag.TryGetValue(key, out value);
+            return this.spritesByTag.TryGetValue(key, out value);
         }
 
         public IEnumerator<KeyValuePair<string, Sprite>> GetEnumerator() {
-            return spritesByTag.GetEnumerator();
+            return this.spritesByTag.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return GetEnumerator();
+            return this.GetEnumerator();
+        }
+
+        private void OnEnable() {
+            if (this.entries != null) {
+                this.spritesByTag = this.entries.ToDictionary(e => e.tag, e => e.sprite);
+            } else {
+                this.spritesByTag = new Dictionary<string, Sprite>();
+            }
         }
     }
 }

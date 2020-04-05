@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace SpaceTrader.Util {
     public class BindAttribute : Attribute {
-        public Type[] Types { get; }
-
         public BindAttribute() {
             this.Types = new Type[0];
         }
@@ -12,6 +10,8 @@ namespace SpaceTrader.Util {
         public BindAttribute(params Type[] types) {
             this.Types = types;
         }
+
+        public Type[] Types { get; }
 
         public static IEnumerable<Type> FindBindTypes(Type ty) {
             var attrs = ty.GetCustomAttributes(typeof(BindAttribute), true);
