@@ -38,6 +38,19 @@ namespace SpaceTrader.Util {
 
         public int Count => this.pool.Count;
 
+        public int ActiveCount {
+            get {
+                var count = 0;
+                foreach (var item in this.pool) {
+                    if (item.gameObject.activeSelf) {
+                        count += 1;
+                    }
+                }
+
+                return count;
+            }
+        }
+
         protected abstract void Initialize(
             TData item,
             TComponent component,
