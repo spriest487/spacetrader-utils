@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace SpaceTrader.Util {
+namespace SpaceTrader.Util.EditorUtil {
     public static class AssetUtility {
         public static void SaveOrUpdate<TAsset>(this TAsset asset, string path)
             where TAsset : Object {

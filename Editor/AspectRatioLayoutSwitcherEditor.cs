@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace SpaceTrader.Util {
+namespace SpaceTrader.Util.EditorUtil {
     public static class AspectRatioLayoutSwitcherEditor {
         [MenuItem("SpaceTrader/Refresh All Layout Switchers")]
         private static void RefreshAllSwitchersInScene() {
