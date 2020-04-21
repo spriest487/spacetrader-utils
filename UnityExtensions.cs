@@ -10,8 +10,27 @@ namespace SpaceTrader.Util {
             return new Vector2(vector3.x, vector3.z);
         }
 
+        public static Vector3 ToXY(this Vector2 vector2) {
+            return new Vector3(vector2.x, vector2.y, 0);
+        }
+
         public static Vector3 ToXZ(this Vector2 vector2) {
             return new Vector3(vector2.x, 0, vector2.y);
+        }
+
+        public static Vector2Int XY(this Vector3Int vector3i) {
+            return new Vector2Int(vector3i.x, vector3i.y);
+        }
+
+        public static Vector2 Rotate(this Vector2 vector2, float degrees) {
+            var sin = Mathf.Sin(degrees * Mathf.Deg2Rad);
+            var cos = Mathf.Cos(degrees * Mathf.Deg2Rad);
+
+            var tx = vector2.x;
+            var ty = vector2.y;
+            vector2.x = cos * tx - sin * ty;
+            vector2.y = sin * tx + cos * ty;
+            return vector2;
         }
 
         public static Rect Encapsulate(this Rect rect, Vector2 point) {
@@ -40,6 +59,12 @@ namespace SpaceTrader.Util {
             }
 
             return newComponent;
+        }
+
+        public static Color GetPixelNearest(this Texture2D texture, float u, float v) {
+            var x = Mathf.RoundToInt(Mathf.Clamp(0, texture.width, u * texture.width));
+            var y = Mathf.RoundToInt(Mathf.Clamp(0, texture.height, v * texture.height));
+            return texture.GetPixel(x, y);
         }
     }
 }
