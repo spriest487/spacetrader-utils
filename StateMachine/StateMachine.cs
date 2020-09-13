@@ -5,20 +5,22 @@ using UnityEngine;
 namespace SpaceTrader.Util {
     public class StateMachine<T> where T : IStateMachineState<T> {
         private readonly Stack<T> stack;
-        private readonly T defaultState;
+        public T DefaultState { get; }
 
-        public T Current => this.stack.Count == 0 ? this.defaultState : this.stack.Peek();
+        public T Current => this.stack.Count == 0 ? this.DefaultState : this.stack.Peek();
 
         public event Action<StateTransition<T>> BeforeStateChange;
         public event Action<StateTransition<T>> StateChanged;
 
         public StateMachine(T defaultState) {
-            this.defaultState = defaultState;
+            this.DefaultState = defaultState;
             this.stack = new Stack<T>(4);
+
+            defaultState?.Enter(default);
         }
 
         public void Push(T newState) {
-            var suspended = this.stack.Count > 0 ? this.stack.Peek() : this.defaultState;
+            var suspended = this.stack.Count > 0 ? this.stack.Peek() : this.DefaultState;
 
             var transition = new StateTransition<T>(suspended, newState, StateTransitionKind.Push);
             this.BeforeStateChange?.Invoke(transition);
@@ -33,7 +35,7 @@ namespace SpaceTrader.Util {
         }
 
         public void Replace(T newState) {
-            var replaced = this.stack.Count > 0 ? this.stack.Pop() : this.defaultState;
+            var replaced = this.stack.Count > 0 ? this.stack.Pop() : this.DefaultState;
 
             var transition = new StateTransition<T>(replaced, newState, StateTransitionKind.Replace);
 
@@ -56,7 +58,7 @@ namespace SpaceTrader.Util {
             }
 
             var popped = this.stack.Pop();
-            var restored = this.stack.Count > 0 ? this.stack.Peek() : this.defaultState;
+            var restored = this.stack.Count > 0 ? this.stack.Peek() : this.DefaultState;
 
             var transition = new StateTransition<T>(popped, restored, StateTransitionKind.Pop);
 
