@@ -108,5 +108,17 @@ namespace SpaceTrader.Util {
 
             return default; // unreachable
         }
+
+        public static IEnumerable<K> Keys<K, V>(this IEnumerable<KeyValuePair<K, V>> source) {
+            foreach (var item in source) {
+                yield return item.Key;
+            }
+        }
+
+        public static IEnumerable<V> Values<K, V>(this IEnumerable<KeyValuePair<K, V>> source) {
+            foreach (var item in source) {
+                yield return item.Value;
+            }
+        }
     }
 }
