@@ -4,8 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEditor.AssetImporters;
 using UnityEditor.Callbacks;
-using UnityEditor.Experimental.AssetImporters;
+
 
 namespace SpaceTrader.Util.EditorUtil {
     [ScriptedImporter(1, "ini")]
