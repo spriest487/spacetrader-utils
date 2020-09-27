@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
-    public class StateMachine<T> where T : IStateMachineState<T> {
+    public class StateMachine<T> where T : class, IStateMachineState<T> {
         private readonly Stack<T> stack;
         public T DefaultState { get; }
 
@@ -16,7 +16,10 @@ namespace SpaceTrader.Util {
             this.DefaultState = defaultState;
             this.stack = new Stack<T>(4);
 
-            defaultState?.Enter(default);
+            if (defaultState != null) {
+                defaultState.Enter(default);
+                defaultState.Restore(default);
+            }
         }
 
         public void Push(T newState) {
@@ -25,7 +28,7 @@ namespace SpaceTrader.Util {
             var transition = new StateTransition<T>(suspended, newState, StateTransitionKind.Push);
             this.BeforeStateChange?.Invoke(transition);
 
-            suspended.Suspend(newState);
+            suspended?.Suspend(newState);
 
             this.stack.Push(newState);
             newState.Enter(suspended);
@@ -41,8 +44,8 @@ namespace SpaceTrader.Util {
 
             this.BeforeStateChange?.Invoke(transition);
 
-            replaced.Suspend(newState);
-            replaced.Exit(newState);
+            replaced?.Suspend(newState);
+            replaced?.Exit(newState);
 
             this.stack.Push(newState);
             newState.Enter(replaced);
@@ -67,7 +70,7 @@ namespace SpaceTrader.Util {
             popped.Suspend(restored);
             popped.Exit(restored);
 
-            restored.Restore(popped);
+            restored?.Restore(popped);
 
             this.StateChanged?.Invoke(transition);
         }
