@@ -66,5 +66,15 @@ namespace SpaceTrader.Util {
             var y = Mathf.RoundToInt(Mathf.Clamp(0, texture.height, v * texture.height));
             return texture.GetPixel(x, y);
         }
+
+        private static readonly Vector3[] screenCornersBuf = new Vector3[4];
+
+        public static Rect GetScreenRect(this RectTransform rectTransform) {
+            rectTransform.GetWorldCorners(screenCornersBuf);
+            var min = screenCornersBuf[0];
+            var max = screenCornersBuf[2];
+
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
     }
 }
