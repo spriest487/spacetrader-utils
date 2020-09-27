@@ -30,7 +30,7 @@ namespace SpaceTrader.Util {
 
         private void SwitchChildren(Transform from, Transform to) {
 #if UNITY_EDITOR
-            Undo.RecordObjects(new[] { from, to }, $"Refresh {nameof(AspectRatioLayoutSwitcher)}");
+            Undo.RecordObjects(new Object[] { from, to }, $"Refresh {nameof(AspectRatioLayoutSwitcher)}");
 #endif
             for (var child = from.childCount; child > 0; --child) {
                 var childXform = from.GetChild(child - 1);
