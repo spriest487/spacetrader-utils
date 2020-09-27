@@ -77,7 +77,12 @@ namespace SpaceTrader.Util {
             var node = this.root;
             while (node.children != null) {
                 var segment = GetChildSegment(node.Region, position);
-                node = node.children[(int)segment];
+
+                if (node.children[(int)segment] is {} child) {
+                    node = child;
+                } else {
+                    return node;
+                }
             }
 
             return node;
@@ -139,13 +144,57 @@ namespace SpaceTrader.Util {
             }
         }
 
+        public IEnumerable<KeyValuePair<Vector3, TItem>> FindNearest(Vector3 origin) {
+            var priorityQueue = new LinkedList<(Node node, float distSqr, int itemIndex)>();
+
+            void EnqueueNode(Node node, int itemIndex) {
+                var distSqr = itemIndex >= 0
+                    ? Vector3.SqrMagnitude(origin - node.items[itemIndex].Key)
+                    : node.Region.SqrDistance(origin);
+
+                // find insertion point
+                var insertAt = priorityQueue.First;
+                if (insertAt == null) {
+                    priorityQueue.AddFirst((node, distSqr, itemIndex));
+                    return;
+                }
+
+                while (insertAt != null && insertAt.Value.distSqr < distSqr) {
+                    insertAt = insertAt.Next;
+                }
+
+                if (insertAt == null) {
+                    priorityQueue.AddLast((node, distSqr, itemIndex));
+                } else {
+                    priorityQueue.AddBefore(insertAt, (node, distSqr, itemIndex));
+                }
+            }
+
+            EnqueueNode(this.root, -1);
+            while (priorityQueue.Count > 0) {
+                var head = priorityQueue.First.Value;
+                priorityQueue.RemoveFirst();
+
+                if (head.itemIndex >= 0) {
+                    var item = head.node.items[head.itemIndex];
+                    yield return item;
+                } else {
+                    foreach (var child in head.node.children) {
+                        if (child != null) {
+                            EnqueueNode(child, -1);
+                        }
+                    }
+                }
+            }
+        }
+
         private class Node {
             internal Bounds Region { get; }
 
             internal Node parent;
             internal readonly Node[] children;
 
-            private readonly List<KeyValuePair<Vector3, TItem>> items;
+            internal readonly List<KeyValuePair<Vector3, TItem>> items;
 
             private TTime lastModified;
 
