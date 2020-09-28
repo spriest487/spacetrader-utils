@@ -111,35 +111,61 @@ namespace SpaceTrader.Util {
         }
 
         public IEnumerable<TItem> Find(Vector3 origin, float range) {
-            var node = this.GetNode(origin);
             var rangeSqr = range * range;
 
+            // origin node (most specific node at this position)
+            var node = this.GetNode(origin);
+
+            // go up the tree until none of our parent's siblings are in range - this is the broadest
+            // parent node that encompasses all possible search results
             var parent = node.parent;
             while (parent != null) {
-                var any = false;
+                var hasSiblingsInRange = false;
+
+                // are any of the other children (current node's siblings) of this node in range?
                 foreach (var child in parent.children) {
                     if (child == null || parent == node) {
                         continue;
                     }
 
                     var distSqr = child.Region.SqrDistance(origin);
-                    if (distSqr <= rangeSqr) {
-                        any = true;
-
-                        foreach (var (position, item) in child.GetEntriesDeep()) {
-                            var itemDistSqr = Vector3.SqrMagnitude(position - origin);
-                            if (itemDistSqr <= rangeSqr) {
-                                yield return item;
-                            }
-                        }
+                    if (!(distSqr <= rangeSqr)) {
+                        continue;
                     }
+
+                    hasSiblingsInRange = true;
                 }
 
-                if (any) {
+                if (hasSiblingsInRange) {
                     node = parent;
-                    parent = parent.parent;
+                    parent = node.parent;
                 } else {
                     break;
+                }
+            }
+
+            foreach (var (position, item) in GetEntriesDeep(node)) {
+                if (Vector3.SqrMagnitude(position - origin) <= range) {
+                    yield return item;
+                }
+            }
+
+            // all item values in range from all nodes beneath the top node
+            static IEnumerable<KeyValuePair<Vector3, TItem>> GetEntriesDeep(Node node) {
+                if (node.items != null) {
+                    foreach (var entry in node.items) {
+                        yield return entry;
+                    }
+                } else {
+                    foreach (var child in node.children) {
+                        if (child == null) {
+                            continue;
+                        }
+
+                        foreach (var entry in GetEntriesDeep(child)) {
+                            yield return entry;
+                        }
+                    }
                 }
             }
         }
@@ -342,24 +368,6 @@ namespace SpaceTrader.Util {
                     foreach (var child in this.children) {
                         if (child != null) {
                             child.Visit(visitor);
-                        }
-                    }
-                }
-            }
-
-            public IEnumerable<KeyValuePair<Vector3, TItem>> GetEntriesDeep() {
-                if (this.items != null) {
-                    foreach (var entry in this.items) {
-                        yield return entry;
-                    }
-                } else {
-                    foreach (var child in this.children) {
-                        if (child == null) {
-                            continue;
-                        }
-
-                        foreach (var entry in child.GetEntriesDeep()) {
-                            yield return entry;
                         }
                     }
                 }
