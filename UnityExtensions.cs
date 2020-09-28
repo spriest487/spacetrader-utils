@@ -22,6 +22,19 @@ namespace SpaceTrader.Util {
             return new Vector2Int(vector3i.x, vector3i.y);
         }
 
+        public static Vector2Int RoundToInt(this Vector2 vector2) {
+            var x = Mathf.RoundToInt(vector2.x);
+            var y = Mathf.RoundToInt(vector2.y);
+            return new Vector2Int(x, y);
+        }
+
+        public static Vector3Int RoundToInt(this Vector3 vector2) {
+            var x = Mathf.RoundToInt(vector2.x);
+            var y = Mathf.RoundToInt(vector2.y);
+            var z = Mathf.RoundToInt(vector2.z);
+            return new Vector3Int(x, y, z);
+        }
+
         public static Vector2 Rotate(this Vector2 vector2, float degrees) {
             var sin = Mathf.Sin(degrees * Mathf.Deg2Rad);
             var cos = Mathf.Cos(degrees * Mathf.Deg2Rad);
