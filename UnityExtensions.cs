@@ -22,6 +22,35 @@ namespace SpaceTrader.Util {
             return new Vector2Int(vector3i.x, vector3i.y);
         }
 
+        public static void Deconstruct(this Vector2Int v, out int x, out int y) {
+            x = v.x;
+            y = v.y;
+        }
+
+        public static void Deconstruct(this Vector3Int v, out int x, out int y, out int z) {
+            x = v.x;
+            y = v.y;
+            z = v.z;
+        }
+
+        public static void Deconstruct(this Vector2 v, out float x, out float y) {
+            x = v.x;
+            y = v.y;
+        }
+
+        public static void Deconstruct(this Vector3 v, out float x, out float y, out float z) {
+            x = v.x;
+            y = v.y;
+            z = v.z;
+        }
+
+        public static void Deconstruct(this Vector4 v, out float x, out float y, out float z, out float w) {
+            x = v.x;
+            y = v.y;
+            z = v.z;
+            w = v.w;
+        }
+
         public static Vector2Int RoundToInt(this Vector2 vector2) {
             var x = Mathf.RoundToInt(vector2.x);
             var y = Mathf.RoundToInt(vector2.y);
