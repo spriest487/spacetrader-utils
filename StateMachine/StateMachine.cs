@@ -75,6 +75,17 @@ namespace SpaceTrader.Util {
             this.StateChanged?.Invoke(transition);
         }
 
+        public void PopTo(T state) {
+            if (!this.stack.Contains(state)) {
+                Debug.LogErrorFormat("trying to pop to state not contained in current state stack: {0}", state);
+                return;
+            }
+
+            while (this.stack.Peek() != state) {
+                this.Pop();
+            }
+        }
+
         public void Reset(T newState) {
             if (this.stack.Count == 0) {
                 this.Push(newState);
