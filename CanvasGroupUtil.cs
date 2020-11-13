@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace SpaceTrader.Util {
-    public static class CanvasGroupFadeUtil {
+    public static class CanvasGroupUtil {
         public static IEnumerator AnimateFade(
             this CanvasGroup canvasGroup,
             float startAlpha,
@@ -24,6 +25,25 @@ namespace SpaceTrader.Util {
 
                 yield return null;
             }
+        }
+
+        public static bool IsInteractiveInCanvasGroups(this Behaviour uiBehaviour) {
+            var interactible = true;
+            var next = uiBehaviour.transform;
+            do {
+                if (next.TryGetComponent(out CanvasGroup canvasGroup)) {
+                    if (canvasGroup.ignoreParentGroups) {
+                        interactible = canvasGroup.interactable;
+                        break;
+                    }
+
+                    interactible &= canvasGroup.interactable;
+                }
+
+                next = next.parent;
+            } while (next);
+
+            return interactible;
         }
     }
 }
