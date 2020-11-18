@@ -31,9 +31,9 @@ namespace SpaceTrader.Util {
 
         public Octree(Bounds region, float minSize, Func<TTime> clock) {
             this.Clock = clock;
+            this.MinSize = minSize;
 
             this.root = new Node(null, region, minSize, clock());
-            this.MinSize = minSize;
         }
 
         public void Add(Vector3 point, TItem item) {
@@ -63,6 +63,10 @@ namespace SpaceTrader.Util {
 
         public bool Remove(TItem item) {
             return this.root.Remove(item, this.Clock());
+        }
+
+        public void Clear() {
+            this.root = new Node(null, this.root.Region, this.MinSize, this.Clock());
         }
 
         public void Shrink(TTime cutoff) {
