@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
-    public class StateMachine<T> where T : class, IStateMachineState<T> {
+    public class StateMachine<T> where T : IStateMachineState<T> {
         private readonly Stack<T> stack;
         public T DefaultState { get; }
 
@@ -75,13 +75,8 @@ namespace SpaceTrader.Util {
             this.StateChanged?.Invoke(transition);
         }
 
-        public void PopTo(T state) {
-            if (!this.stack.Contains(state)) {
-                Debug.LogErrorFormat("trying to pop to state not contained in current state stack: {0}", state);
-                return;
-            }
-
-            while (this.stack.Peek() != state) {
+        public void PopWhile(Func<T, bool> predicate) {
+            while (predicate(this.Current) && this.stack.Count > 0) {
                 this.Pop();
             }
         }

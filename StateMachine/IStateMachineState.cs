@@ -1,5 +1,5 @@
 ﻿namespace SpaceTrader.Util {
-    public interface IStateMachineState<in T> where T : class {
+    public interface IStateMachineState<in T> {
         void Enter(T fromState);
         void Exit(T toState);
 
