@@ -148,28 +148,9 @@ namespace SpaceTrader.Util {
                 }
             }
 
-            foreach (var (position, item) in GetEntriesDeep(node)) {
+            foreach (var (position, item) in node.GetEntriesDeep()) {
                 if (Vector3.SqrMagnitude(position - origin) <= range) {
                     yield return item;
-                }
-            }
-
-            // all item values in range from all nodes beneath the top node
-            static IEnumerable<KeyValuePair<Vector3, TItem>> GetEntriesDeep(Node node) {
-                if (node.items != null) {
-                    foreach (var entry in node.items) {
-                        yield return entry;
-                    }
-                } else {
-                    foreach (var child in node.children) {
-                        if (child == null) {
-                            continue;
-                        }
-
-                        foreach (var entry in GetEntriesDeep(child)) {
-                            yield return entry;
-                        }
-                    }
                 }
             }
         }
@@ -372,6 +353,25 @@ namespace SpaceTrader.Util {
                     foreach (var child in this.children) {
                         if (child != null) {
                             child.Visit(visitor);
+                        }
+                    }
+                }
+            }
+
+            // all item values in range from all nodes beneath the top node
+            public IEnumerable<KeyValuePair<Vector3, TItem>> GetEntriesDeep() {
+                if (this.items != null) {
+                    foreach (var entry in this.items) {
+                        yield return entry;
+                    }
+                } else {
+                    foreach (var child in this.children) {
+                        if (child == null) {
+                            continue;
+                        }
+
+                        foreach (var entry in child.GetEntriesDeep()) {
+                            yield return entry;
                         }
                     }
                 }
