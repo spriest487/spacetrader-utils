@@ -3,7 +3,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -62,6 +61,13 @@ namespace SpaceTrader.Util {
             return Object.Instantiate(this.prefab, root);
         }
 
+        protected virtual bool Include(TData item, TSender sender) {
+            return true;
+        }
+
+        /// <summary>
+        /// Destroy all TComponent instances under the Root's hierarchy that are not already in the pool
+        /// </summary>
         public void CleanupRoot() {
             if (!Application.isPlaying) {
                 Debug.LogAssertion("only call CleanupRoot in play mode");
@@ -76,12 +82,35 @@ namespace SpaceTrader.Util {
             }
         }
 
-        public void Populate(
-            IEnumerable<TData> data,
-            TSender sender
-        ) {
+        /// <summary>
+        /// Add all children that exist in the hierarchy under the Root and that are not already members of the
+        /// pool to the pool as disabled instances
+        /// </summary>
+        public void AddExistingChildren() {
+            foreach (var instance in this.root.GetComponentsInChildren<TComponent>(true)) {
+                if (this.pool.Contains(instance)) {
+                    continue;
+                }
+
+                this.pool.Add(instance);
+                instance.gameObject.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Populate the root with enough instances to represent each item in the source. Initializes each instance
+        /// with a corresponding item from the source. Disables all instances which are not needed to display the
+        /// current number of items in the source.
+        /// </summary>
+        public void Populate<TSrc>(TSrc source, TSender sender)
+            where TSrc : IEnumerable<TData> {
             var index = 0;
-            foreach (var item in data) {
+
+            foreach (var item in source) {
+                if (!this.Include(item, sender)) {
+                    continue;
+                }
+
                 TComponent component;
                 if (index < this.pool.Count) {
                     component = this.pool[index];
@@ -103,7 +132,7 @@ namespace SpaceTrader.Util {
         }
 
         /// <summary>
-        ///     Return all component instances to the pool
+        /// Return all active component instances to the pool
         /// </summary>
         public void Empty() {
             foreach (var item in this.pool) {
@@ -112,7 +141,7 @@ namespace SpaceTrader.Util {
         }
 
         /// <summary>
-        ///     Empty the pool storage and destroy all component instances
+        /// Empty the pool storage and destroy all component instances
         /// </summary>
         public void Clear() {
             foreach (var item in this.pool) {
@@ -128,6 +157,9 @@ namespace SpaceTrader.Util {
             this.pool.Clear();
         }
 
+        /// <summary>
+        /// Add a single item item to the pool, either instantiating a new instance or initializing an existing one.
+        /// </summary>
         public TComponent Add(TData data, TSender sender) {
             var index = this.pool.FindIndex(it => !it.gameObject.activeSelf);
             TComponent component;
@@ -149,7 +181,8 @@ namespace SpaceTrader.Util {
         private TComponent InstantiateElement(TSender sender) {
 #if UNITY_EDITOR
             if (!Application.isPlaying) {
-                var obj = (TComponent)PrefabUtility.InstantiatePrefab(this.prefab
+                var obj = (TComponent)PrefabUtility.InstantiatePrefab(
+                    this.prefab
                 );
                 obj.transform.SetParent(this.root);
                 return obj;
@@ -157,20 +190,6 @@ namespace SpaceTrader.Util {
 #endif
 
             return this.Instantiate(sender, this.root);
-        }
-
-        public void Remove(TComponent item) {
-            this.pool.Single(it => it == item).gameObject.SetActive(false);
-        }
-
-        public void RemoveAll(Func<TComponent, bool> predicate) {
-            foreach (var removed in this.pool.Where(predicate)) {
-                removed.gameObject.SetActive(false);
-            }
-        }
-
-        public int IndexOf(TComponent component) {
-            return this.pool.IndexOf(component);
         }
     }
 }
