@@ -115,6 +115,7 @@ namespace SpaceTrader.Util.EditorUtil {
             var strings = Strings.Create(stringsMap);
 
             ctx.AddObjectToAsset(Path.GetFileName(ctx.assetPath), strings);
+            ctx.SetMainObject(strings);
         }
     }
 }
