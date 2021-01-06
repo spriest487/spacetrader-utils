@@ -9,6 +9,124 @@ using Object = UnityEngine.Object;
 
 namespace SpaceTrader.Util {
     [Serializable]
+    public class PooledList<TData, TComponent> : IReadOnlyList<TComponent>
+        where TComponent : Component {
+        public delegate bool FilterDelegate(TData data);
+        public delegate TComponent InstantiateDelegate(TComponent prefab, Transform parent);
+        public delegate void InitializeDelegate(TData data, TComponent item);
+
+        [SerializeField, HideInInspector]
+        private List<TComponent> pool = new List<TComponent>();
+
+        [SerializeField]
+        private TComponent prefab;
+
+        [SerializeField]
+        private Transform root;
+
+        public TComponent Prefab => this.prefab;
+        public Transform Root => this.root;
+
+        public int Count => this.pool.Count;
+
+        public IEnumerator<TComponent> GetEnumerator() {
+            return this.pool.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return this.GetEnumerator();
+        }
+
+        public TComponent this[int index] => this.pool[index];
+
+        public int ActiveCount {
+            get {
+                var count = 0;
+                foreach (var item in this.pool) {
+                    if (item.gameObject.activeSelf) {
+                        count += 1;
+                    }
+                }
+
+                return count;
+            }
+        }
+
+        /// <summary>
+        /// Destroy all TComponent instances under the Root's hierarchy that are not already in the pool
+        /// </summary>
+        public void CleanupRoot() {
+            if (!Application.isPlaying) {
+                Debug.LogAssertion("only call CleanupRoot in play mode");
+                return;
+            }
+
+            var instances = this.root.GetComponentsInChildren<TComponent>();
+            foreach (var instance in instances) {
+                if (!this.pool.Contains(instance)) {
+                    Object.Destroy(instance.gameObject);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add all children that exist in the hierarchy under the Root and that are not already members of the
+        /// pool to the pool as disabled instances
+        /// </summary>
+        public void AddExistingChildren() {
+            foreach (var instance in this.root.GetComponentsInChildren<TComponent>(true)) {
+                if (this.pool.Contains(instance)) {
+                    continue;
+                }
+
+                this.pool.Add(instance);
+                instance.gameObject.SetActive(false);
+            }
+        }
+
+        public void Refresh(
+            IEnumerable<TData> source,
+            FilterDelegate filter = null,
+            InitializeDelegate initializer = null,
+            InstantiateDelegate instantiator = null
+        ) {
+            var index = 0;
+
+            foreach (var item in source) {
+                if (filter != null && !filter(item)) {
+                    continue;
+                }
+
+                TComponent component;
+                if (index < this.pool.Count) {
+                    component = this.pool[index];
+                } else {
+                    component = instantiator != null
+                        ? instantiator(this.prefab, this.root)
+                        : Object.Instantiate(this.prefab, this.root);
+                    this.pool.Add(component);
+                }
+
+                component.gameObject.SetActive(true);
+                initializer?.Invoke(item, component);
+
+                ++index;
+            }
+
+            while (index < this.pool.Count) {
+                this.pool[index].gameObject.SetActive(false);
+                ++index;
+            }
+        }
+
+        public void Clear() {
+            foreach (var item in this.pool) {
+                item.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    [Serializable]
     public abstract class PooledList<TData, TComponent, TSender> :
         IReadOnlyList<TComponent>
         where TComponent : Component {
