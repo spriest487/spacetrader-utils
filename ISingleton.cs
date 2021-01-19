@@ -1,4 +1,4 @@
-namespace Outward {
+﻿namespace SpaceTraderUtils {
     public interface ISingleton {
     }
 }
