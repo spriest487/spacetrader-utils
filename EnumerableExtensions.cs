@@ -90,25 +90,6 @@ namespace SpaceTrader.Util {
             v = kvp.Value;
         }
 
-        public static T RandomWeighted<T>(
-            this IReadOnlyList<T> source,
-            Random random,
-            Func<T, int> weightSelector
-        ) {
-            var weightRange = source.Sum(weightSelector);
-            var value = random.Next(0, weightRange);
-
-            var weightAcc = 0;
-            foreach (var item in source) {
-                weightAcc += weightSelector(item);
-                if (weightAcc >= value) {
-                    return item;
-                }
-            }
-
-            return default; // unreachable
-        }
-
         public static IEnumerable<K> Keys<K, V>(this IEnumerable<KeyValuePair<K, V>> source) {
             foreach (var item in source) {
                 yield return item.Key;
