@@ -3,7 +3,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Component = System.ComponentModel.Component;
 using Object = UnityEngine.Object;
 
 #if ADDRESSABLES
