@@ -1,16 +1,27 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.SceneManagement;
 
 namespace SpaceTraderUtils.AddressableUtils {
     public class PrefabAssetSpawner : MonoBehaviour {
+        public enum SpawnScene {
+            [UsedImplicitly]
+            ActiveScene,
+            SpawnerScene,
+        }
+
         [field: SerializeField]
         public AssetReferenceT<GameObject> PrefabAsset { get; private set; }
 
-        public event Action<PrefabAssetSpawner> Spawned;
+        [field: SerializeField]
+        public SpawnScene Scene { get; private set; }
+
+        public event Action<PrefabAssetSpawner, GameObject> Spawned;
 
         private IEnumerator Start() {
             var transform = this.transform;
@@ -27,7 +38,13 @@ namespace SpaceTraderUtils.AddressableUtils {
 
                 Debug.LogErrorFormat("Core failed to load ({0})", op.Status);
             } else {
-                this.Spawned?.Invoke(this);
+                var instance = op.Result;
+
+                if (this.Scene == SpawnScene.SpawnerScene) {
+                    SceneManager.MoveGameObjectToScene(instance, this.gameObject.scene);
+                }
+
+                this.Spawned?.Invoke(this, instance);
             }
 
             Destroy(this.gameObject);
