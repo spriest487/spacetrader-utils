@@ -27,7 +27,7 @@ namespace SpaceTraderUtils.AddressableUtils {
 
         public new AsyncOperationHandle<TComponent> LoadAssetAsync() {
             var loadPrefabOp = base.LoadAssetAsync();
-            return Addressables.ResourceManager.CreateChainOperation(loadPrefabOp, ThenGetComponent<TComponent>);
+            return WrapOperation(loadPrefabOp, ThenGetComponent<TComponent>);
         }
 
         public new AsyncOperationHandle<TComponent> InstantiateAsync(
@@ -35,7 +35,7 @@ namespace SpaceTraderUtils.AddressableUtils {
             bool instantiateInWorldSpace = false
         ) {
             var instantiateOp = base.InstantiateAsync(parent, instantiateInWorldSpace);
-            return Addressables.ResourceManager.CreateChainOperation(instantiateOp, ThenGetComponent<TComponent>);
+            return WrapOperation(instantiateOp, ThenGetComponent<TComponent>);
         }
 
         public new AsyncOperationHandle<TComponent> InstantiateAsync(
@@ -44,7 +44,7 @@ namespace SpaceTraderUtils.AddressableUtils {
             Transform parent = null
         ) {
             var instantiateOp = base.InstantiateAsync(position, rotation, parent);
-            return Addressables.ResourceManager.CreateChainOperation(instantiateOp, ThenGetComponent<TComponent>);
+            return WrapOperation(instantiateOp, ThenGetComponent<TComponent>);
         }
 
         private static AsyncOperationHandle<T> ThenCast<T>(AsyncOperationHandle<TComponent> completedOp)
@@ -60,7 +60,7 @@ namespace SpaceTraderUtils.AddressableUtils {
 
         public new AsyncOperationHandle<T> LoadAssetAsync<T>()
             where T : class {
-            return Addressables.ResourceManager.CreateChainOperation(this.LoadAssetAsync(), ThenCast<T>);
+            return WrapOperation(this.LoadAssetAsync(), ThenCast<T>);
         }
 
         public AsyncOperationHandle<T> InstantiateAsync<T>(
@@ -68,10 +68,7 @@ namespace SpaceTraderUtils.AddressableUtils {
             bool instantiateInWorldSpace = false
         )
             where T : class {
-            return Addressables.ResourceManager.CreateChainOperation(
-                this.InstantiateAsync(parent, instantiateInWorldSpace),
-                ThenCast<T>
-            );
+            return WrapOperation(this.InstantiateAsync(parent, instantiateInWorldSpace), ThenCast<T>);
         }
 
         public AsyncOperationHandle<T> InstantiateAsync<T>(
@@ -80,10 +77,7 @@ namespace SpaceTraderUtils.AddressableUtils {
             Transform parent = null
         )
             where T : class {
-            return Addressables.ResourceManager.CreateChainOperation(
-                this.InstantiateAsync(position, rotation, parent),
-                ThenCast<T>
-            );
+            return WrapOperation(this.InstantiateAsync(position, rotation, parent), ThenCast<T>);
         }
 
         public void ReleaseInstance(TComponent instance) {
@@ -91,7 +85,17 @@ namespace SpaceTraderUtils.AddressableUtils {
         }
 
         public void ReleaseInstance(AsyncOperationHandle<TComponent> instance) {
-            Addressables.ReleaseInstance(instance);
+            if (instance.IsDone) {
+                if (instance.Result) {
+                    Addressables.ReleaseInstance(instance.Result.gameObject);
+                }
+            } else {
+                instance.Completed += completedOp => {
+                    if (completedOp.Result) {
+                        Addressables.ReleaseInstance(completedOp.Result.gameObject);
+                    }
+                };
+            }
         }
 
         public override bool ValidateAsset(string path) {
@@ -109,6 +113,17 @@ namespace SpaceTraderUtils.AddressableUtils {
             }
 
             return prefab.TryGetComponent(out TComponent _);
+        }
+
+        private static AsyncOperationHandle<B> WrapOperation<A, B>(
+            AsyncOperationHandle<A> original,
+            Func<AsyncOperationHandle<A>, AsyncOperationHandle<B>> chain
+        ) {
+            var chainedOp = Addressables.ResourceManager.CreateChainOperation(original, chain);
+
+            Addressables.Release(original);
+
+            return chainedOp;
         }
     }
 }
