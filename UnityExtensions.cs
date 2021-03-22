@@ -118,5 +118,22 @@ namespace SpaceTrader.Util {
 
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
+
+        public static T GetComponentInParent<T>(this GameObject gameObject, bool includeInactive) where T : class {
+            var next = gameObject.transform;
+            do {
+                if (next.TryGetComponent<T>(out var component)) {
+                    return component;
+                }
+
+                next = next.parent;
+            } while (next);
+
+            return null;
+        }
+
+        public static T GetComponentInParent<T>(this Component component, bool includeInactive) {
+            return component.gameObject.GetComponentInParent<T>(includeInactive);
+        }
     }
 }
