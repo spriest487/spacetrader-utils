@@ -28,11 +28,11 @@ namespace SpaceTrader.Util {
             var transition = new StateTransition<T>(suspended, newState, StateTransitionKind.Push);
             this.BeforeStateChange?.Invoke(transition);
 
-            suspended?.Suspend(newState);
+            SuspendState(suspended, newState);
 
             this.stack.Push(newState);
-            newState.Enter(suspended);
-            newState.Restore(suspended);
+            EnterState(newState, suspended);
+            RestoreState(newState, suspended);
 
             this.StateChanged?.Invoke(transition);
         }
@@ -44,12 +44,12 @@ namespace SpaceTrader.Util {
 
             this.BeforeStateChange?.Invoke(transition);
 
-            replaced?.Suspend(newState);
-            replaced?.Exit(newState);
+            SuspendState(replaced, newState);
+            ExitState(replaced, newState);
 
             this.stack.Push(newState);
-            newState.Enter(replaced);
-            newState.Restore(replaced);
+            EnterState(newState, replaced);
+            RestoreState(newState, replaced);
 
             this.StateChanged?.Invoke(transition);
         }
@@ -67,12 +67,44 @@ namespace SpaceTrader.Util {
 
             this.BeforeStateChange?.Invoke(transition);
 
-            popped.Suspend(restored);
-            popped.Exit(restored);
+            SuspendState(popped, restored);
+            ExitState(popped, restored);
 
-            restored?.Restore(popped);
+            RestoreState(restored, popped);
 
             this.StateChanged?.Invoke(transition);
+        }
+
+        private static void EnterState(T state, T fromState) {
+            try {
+                state?.Enter(fromState);
+            } catch (Exception ex) {
+                Debug.LogErrorFormat("State Enter transition failed: {0}", ex);
+            }
+        }
+
+        private static void RestoreState(T state, T fromState) {
+            try {
+                state?.Restore(fromState);
+            } catch (Exception ex) {
+                Debug.LogErrorFormat("State Restore transition failed: {0}", ex);
+            }
+        }
+
+        private static void SuspendState(T state, T toState) {
+            try {
+                state?.Suspend(toState);
+            } catch (Exception ex) {
+                Debug.LogErrorFormat("State Suspend transition failed: {0}", ex);
+            }
+        }
+
+        private static void ExitState(T state, T toState) {
+            try {
+                state?.Exit(toState);
+            } catch (Exception ex) {
+                Debug.LogErrorFormat("State Exit transition failed: {0}", ex);
+            }
         }
 
         public void PopWhile(Func<T, bool> predicate) {
