@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
+    public delegate void StateTransitionDelegate<T>(in StateTransition<T> transition);
+
     public class StateMachine<T> where T : IStateMachineState<T> {
         private readonly Stack<T> stack;
         public T DefaultState { get; }
 
         public T Current => this.stack.Count == 0 ? this.DefaultState : this.stack.Peek();
 
-        public event Action<StateTransition<T>> BeforeStateChange;
-        public event Action<StateTransition<T>> StateChanged;
+        public event StateTransitionDelegate<T> BeforeStateChange;
+        public event StateTransitionDelegate<T> StateChanged;
 
         public StateMachine(T defaultState) {
             this.DefaultState = defaultState;
@@ -26,7 +28,7 @@ namespace SpaceTrader.Util {
             var suspended = this.stack.Count > 0 ? this.stack.Peek() : this.DefaultState;
 
             var transition = new StateTransition<T>(suspended, newState, StateTransitionKind.Push);
-            this.BeforeStateChange?.Invoke(transition);
+            this.BeforeStateChange?.Invoke(in transition);
 
             SuspendState(suspended, newState);
 
@@ -34,7 +36,7 @@ namespace SpaceTrader.Util {
             EnterState(newState, suspended);
             RestoreState(newState, suspended);
 
-            this.StateChanged?.Invoke(transition);
+            this.StateChanged?.Invoke(in transition);
         }
 
         public void Replace(T newState) {
@@ -42,7 +44,7 @@ namespace SpaceTrader.Util {
 
             var transition = new StateTransition<T>(replaced, newState, StateTransitionKind.Replace);
 
-            this.BeforeStateChange?.Invoke(transition);
+            this.BeforeStateChange?.Invoke(in transition);
 
             SuspendState(replaced, newState);
             ExitState(replaced, newState);
@@ -51,7 +53,7 @@ namespace SpaceTrader.Util {
             EnterState(newState, replaced);
             RestoreState(newState, replaced);
 
-            this.StateChanged?.Invoke(transition);
+            this.StateChanged?.Invoke(in transition);
         }
 
         public void Pop() {
@@ -65,14 +67,14 @@ namespace SpaceTrader.Util {
 
             var transition = new StateTransition<T>(popped, restored, StateTransitionKind.Pop);
 
-            this.BeforeStateChange?.Invoke(transition);
+            this.BeforeStateChange?.Invoke(in transition);
 
             SuspendState(popped, restored);
             ExitState(popped, restored);
 
             RestoreState(restored, popped);
 
-            this.StateChanged?.Invoke(transition);
+            this.StateChanged?.Invoke(in transition);
         }
 
         private static void EnterState(T state, T fromState) {
