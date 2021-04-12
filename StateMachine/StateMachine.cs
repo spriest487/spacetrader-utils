@@ -6,9 +6,20 @@ namespace SpaceTrader.Util {
     public delegate void StateTransitionDelegate<T>(in StateTransition<T> transition);
 
     public class StateMachine<T> where T : IStateMachineState<T> {
+#if ODIN_INSPECTOR
+        [Sirenix.OdinInspector.ShowInInspector]
+        [Sirenix.OdinInspector.ListDrawerSettings(IsReadOnly = true)]
+#endif
         private readonly Stack<T> stack;
+
+#if ODIN_INSPECTOR
+        [Sirenix.OdinInspector.ShowInInspector]
+#endif
         public T DefaultState { get; }
 
+#if ODIN_INSPECTOR
+        [Sirenix.OdinInspector.ShowInInspector]
+#endif
         public T Current => this.stack.Count == 0 ? this.DefaultState : this.stack.Peek();
 
         public event StateTransitionDelegate<T> BeforeStateChange;
