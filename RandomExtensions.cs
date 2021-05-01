@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Random = System.Random;
 
-namespace SpaceTraderUtils {
+namespace SpaceTrader.Util {
     public static class RandomExtensions {
         public static float NextFloat(this Random random) {
             return (float)random.NextDouble();

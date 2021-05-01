@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 #if ADDRESSABLES
 
-namespace SpaceTraderUtils.AddressableUtils {
+namespace SpaceTrader.Util.AddressableUtils {
     [Serializable]
     public class PrefabComponentReference<TComponent> : AssetReferenceGameObject
         where TComponent : Component {

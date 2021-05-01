@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 
-namespace SpaceTraderUtils.AddressableUtils {
+namespace SpaceTrader.Util.AddressableUtils {
     public class PrefabAssetSpawner : MonoBehaviour {
         public enum SpawnScene {
             [UsedImplicitly]
