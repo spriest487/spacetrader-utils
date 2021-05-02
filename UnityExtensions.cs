@@ -119,21 +119,51 @@ namespace SpaceTrader.Util {
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
-        public static T GetComponentInParent<T>(this GameObject gameObject, bool includeInactive) where T : class {
-            var next = gameObject.transform;
-            do {
-                if (next.TryGetComponent<T>(out var component)) {
-                    return component;
-                }
+        public static T GetComponentInParent<T>(this GameObject gameObject, bool includeInactive)
+            where T : class {
+            if (!gameObject.TryGetComponentInParent<T>(out var result, includeInactive)) {
+                result = null;
+            }
 
-                next = next.parent;
-            } while (next);
-
-            return null;
+            return result;
         }
 
         public static T GetComponentInParent<T>(this Component component, bool includeInactive) {
             return component.gameObject.GetComponentInParent<T>(includeInactive);
+        }
+
+        public static bool TryGetComponentInParent<T>(
+            this GameObject gameObject,
+            out T result,
+            bool includeInactive = false
+        )
+            where T : class {
+            var next = gameObject.transform;
+            do {
+                var current = next;
+                next = next.parent;
+
+                if (!current.gameObject.activeInHierarchy && !includeInactive) {
+                    continue;
+                }
+
+                if (current.TryGetComponent<T>(out var component)) {
+                    result = component;
+                    return true;
+                }
+            } while (next);
+
+            result = null;
+            return false;
+        }
+
+        public static bool TryGetComponentInParent<T>(
+            this Component component,
+            out T result,
+            bool includeInactive = false
+        )
+            where T : class {
+            return component.gameObject.TryGetComponentInParent(out result, includeInactive);
         }
     }
 }
