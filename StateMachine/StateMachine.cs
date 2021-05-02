@@ -12,6 +12,8 @@ namespace SpaceTrader.Util {
 #endif
         private readonly Stack<T> stack;
 
+        public int Count => this.stack.Count;
+
 #if ODIN_INSPECTOR
         [Sirenix.OdinInspector.ShowInInspector]
 #endif
