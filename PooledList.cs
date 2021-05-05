@@ -73,11 +73,13 @@ namespace SpaceTrader.Util {
         /// Add all children that exist in the hierarchy under the Root and that are not already members of the
         /// pool to the pool as disabled instances
         /// </summary>
-        public void AddExistingChildren() {
+        public void AddExistingChildren(Action<TComponent> initializeItem = null) {
             foreach (var instance in this.root.GetComponentsInChildren<TComponent>(true)) {
                 if (this.pool.Contains(instance)) {
                     continue;
                 }
+
+                initializeItem?.Invoke(instance);
 
                 this.pool.Add(instance);
                 instance.gameObject.SetActive(false);
