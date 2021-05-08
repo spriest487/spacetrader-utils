@@ -39,17 +39,15 @@ namespace SpaceTrader.Util {
 
         public TComponent this[int index] => this.pool[index];
 
-        public int ActiveCount {
-            get {
-                var count = 0;
-                foreach (var item in this.pool) {
-                    if (item.gameObject.activeSelf) {
-                        count += 1;
-                    }
+        public int CountActive() {
+            var count = 0;
+            foreach (var item in this.pool) {
+                if (item.gameObject.activeSelf) {
+                    count += 1;
                 }
-
-                return count;
             }
+
+            return count;
         }
 
         /// <summary>
