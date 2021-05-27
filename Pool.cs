@@ -88,6 +88,12 @@ namespace SpaceTrader.Util {
                 this.Return(item);
             }
         }
+
+        public void Remove(Component item) {
+            if (!this.active.Remove(item)) {
+                this.pooled.Remove(item);
+            }
+        }
     }
 
     public class Pool<T> : Pool where T : Component {
