@@ -65,6 +65,11 @@ namespace SpaceTrader.Util {
             return this.root.Remove(item, this.Clock());
         }
 
+        public void Move(TItem item, Vector3 newPosition) {
+            this.Remove(item);
+            this.Add(newPosition, item);
+        }
+
         public void Clear() {
             this.root = new Node(null, this.root.Region, this.MinSize, this.Clock());
         }
