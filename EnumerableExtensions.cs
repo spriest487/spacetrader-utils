@@ -101,5 +101,10 @@ namespace SpaceTrader.Util {
                 yield return item.Value;
             }
         }
+
+        public static void Deconstruct<K, V>(this IGrouping<K, V> group, out K k, out IEnumerable<V> v) {
+            k = group.Key;
+            v = group;
+        }
     }
 }
