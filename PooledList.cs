@@ -92,31 +92,56 @@ namespace SpaceTrader.Util {
         ) {
             var index = 0;
 
-            foreach (var item in source) {
-                if (filter != null && !filter(item)) {
-                    continue;
+            if (source is IReadOnlyList<TData> sourceList) {
+                for (var i = 0; i < sourceList.Count; i += 1) {
+                    if (this.PopulateItem(sourceList[i], index, filter, initializer, instantiator)) {
+                        index += 1;
+                    }
                 }
-
-                TComponent component;
-                if (index < this.pool.Count) {
-                    component = this.pool[index];
-                } else {
-                    component = instantiator != null
-                        ? instantiator(this.prefab, this.root)
-                        : Object.Instantiate(this.prefab, this.root);
-                    this.pool.Add(component);
+            } else {
+                foreach (var item in source) {
+                    if (this.PopulateItem(item, index, filter, initializer, instantiator)) {
+                        index += 1;
+                    }
                 }
-
-                component.gameObject.SetActive(true);
-                initializer?.Invoke(item, component);
-
-                ++index;
             }
 
             while (index < this.pool.Count) {
                 this.pool[index].gameObject.SetActive(false);
-                ++index;
+                index += 1;
             }
+        }
+
+        public void SortActive(IComparer<TComponent> comparer = null) {
+            var activeCount = this.CountActive();
+
+            this.pool.Sort(0, activeCount, comparer);
+        }
+
+        private bool PopulateItem(TData item,
+            int index,
+            FilterDelegate filter,
+            InitializeDelegate initializer,
+            InstantiateDelegate instantiator
+        ) {
+            if (filter != null && !filter(item)) {
+                return false;
+            }
+
+            TComponent component;
+            if (index < this.pool.Count) {
+                component = this.pool[index];
+            } else {
+                component = instantiator != null
+                    ? instantiator(this.prefab, this.root)
+                    : Object.Instantiate(this.prefab, this.root);
+                this.pool.Add(component);
+            }
+
+            component.gameObject.SetActive(true);
+            initializer?.Invoke(item, component);
+
+            return true;
         }
 
         public void Clear() {
@@ -126,6 +151,7 @@ namespace SpaceTrader.Util {
         }
     }
 
+    [Obsolete("Use PooledList<TData, TComponent> instead")]
     [Serializable]
     public abstract class PooledList<TData, TComponent, TSender> :
         IReadOnlyList<TComponent>
