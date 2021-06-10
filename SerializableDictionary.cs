@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SpaceTrader.Util {
     [Serializable]
-    internal class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver {
+    public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver {
         [SerializeField]
         private List<TKey> keys;
 
