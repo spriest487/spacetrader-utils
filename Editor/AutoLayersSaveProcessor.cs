@@ -8,8 +8,6 @@ using UnityEngine;
 
 namespace SpaceTrader.Util.EditorUtil {
     public class AutoLayersSaveProcessor : UnityEditor.AssetModificationProcessor {
-        private static readonly string OutPath = "AutoLayers/Layers.cs";
-
         private static string SanitizeIdentifier(string name) {
             name = name.Trim();
             if (string.IsNullOrEmpty(name)) {
@@ -45,24 +43,15 @@ namespace SpaceTrader.Util.EditorUtil {
             }
         }
 
-        private static string GetScriptNamespace() {
-            var settingsAsset = AssetDatabase.LoadMainAssetAtPath("ProjectSettings/EditorSettings.asset");
-            using (var settingsObj = new SerializedObject(settingsAsset))
-            using (var nsProp = settingsObj.FindProperty("m_ProjectGenerationRootNamespace")) {
-                return nsProp.stringValue;
-            }
-        }
-
-        [MenuItem("SpaceTrader/Generate Auto Layers")]
-        private static void GenerateScript() {
-            var savePath = Path.Combine(Application.dataPath, OutPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+        public static void GenerateScript() {
+            var saveFile = new FileInfo(Path.Combine(Application.dataPath, AutoLayersPrefs.OutputPath));
+            saveFile.Directory?.Create();
 
             var layers = ValidLayers().ToList();
 
-            var ns = GetScriptNamespace();
+            var ns = AutoLayersPrefs.Namespace;
 
-            using (var writer = File.CreateText(savePath)) {
+            using (var writer = saveFile.CreateText()) {
                 if (!string.IsNullOrWhiteSpace(ns)) {
                     writer.WriteLine("namespace {0} {{", ns);
                 }
