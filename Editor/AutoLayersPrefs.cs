@@ -33,7 +33,7 @@ namespace SpaceTrader.Util.EditorUtil {
             }
         }
 
-        private const string prefsPath = "Assets/AutoLayers/AutoLayersSettings.json";
+        private const string prefsPath = "AutoLayers/AutoLayersSettings.json";
 
         private static Prefs GetPrefs() {
             var file = new FileInfo(Path.Combine(Application.dataPath, prefsPath));
@@ -53,6 +53,8 @@ namespace SpaceTrader.Util.EditorUtil {
             var file = new FileInfo(Path.Combine(Application.dataPath, prefsPath));
 
             try {
+                file.Directory?.Create();
+
                 var json = JsonUtility.ToJson(prefs);
 
                 File.WriteAllText(file.FullName, json);
