@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Reflection;
+using UnityEngine;
 
 namespace SpaceTrader.Util {
     public static class UnityExtensions {
@@ -164,6 +166,23 @@ namespace SpaceTrader.Util {
         )
             where T : class {
             return component.gameObject.TryGetComponentInParent(out result, includeInactive);
+        }
+
+        public static string GetSerializedPropertyName(this Type type, string memberName) {
+            const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+            if (type.GetField(memberName, bindingFlags) != null) {
+                return memberName;
+            }
+
+            if (type.GetProperty(memberName, bindingFlags) != null) {
+                var backingFieldName = $"<{memberName}>k__BackingField";
+                if (type.GetField(backingFieldName, bindingFlags) != null) {
+                    return backingFieldName;
+                }
+            }
+
+            return null;
         }
     }
 }
