@@ -1,26 +1,30 @@
 ﻿using UnityEngine;
 
 namespace SpaceTrader.Util {
-    [ExecuteInEditMode]
     public class Billboard : MonoBehaviour {
-        [Range(-360, 360), SerializeField]
-        private float angle;
+        [field: SerializeField, Range(-360, 360)]
+        public float Angle { get; set; }
 
-        public float Angle {
-            get => this.angle;
-            set => this.angle = value;
-        }
+        [field: SerializeField]
+        public Camera Camera { get; set; }
 
-        public void Update() {
+        private void Update() {
+            var camera = this.Camera ? this.Camera : Camera.main;
+            if (!camera) {
+                return;
+            }
+
             var up = Vector3.up;
-            if (!Mathf.Approximately(0, this.angle)) {
-                var angleRot = Quaternion.Euler(0, 0, -this.angle);
+            if (!Mathf.Approximately(0, this.Angle)) {
+                var angleRot = Quaternion.Euler(0, 0, -this.Angle);
                 up = angleRot * up;
             }
 
-            var camXform = Camera.main.transform;
-            this.transform.LookAt(this.transform.position + camXform.rotation * Vector3.forward,
-                camXform.rotation * up);
+            var camXform = camera.transform;
+            var camRotation = camXform.rotation;
+
+            this.transform.LookAt(this.transform.position + camRotation * Vector3.forward,
+                camRotation * up);
         }
     }
 }
