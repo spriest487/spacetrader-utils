@@ -77,6 +77,20 @@ namespace SpaceTrader.Util {
             return vector2;
         }
 
+        public static Vector2 Rotate90CW(this Vector2 vector) {
+            var y = vector.x * -1;
+            var x = vector.y;
+
+            return new Vector2(x, y);
+        }
+
+        public static Vector2 Rotation90CCW(this Vector2 vector) {
+            var x = vector.y * -1;
+            var y = vector.x;
+
+            return new Vector2(x, y);
+        }
+
         public static Rect Encapsulate(this Rect rect, Vector2 point) {
             rect.xMin = Mathf.Min(point.x, rect.xMin);
             rect.yMin = Mathf.Min(point.y, rect.yMin);
