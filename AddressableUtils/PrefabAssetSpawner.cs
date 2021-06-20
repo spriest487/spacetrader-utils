@@ -15,11 +15,23 @@ namespace SpaceTrader.Util.AddressableUtils {
             SpawnerScene,
         }
 
+        public enum DestroyOnCompleteObject {
+            Nothing,
+            Component,
+            GameObject,
+        }
+
         [field: SerializeField]
         public AssetReferenceT<GameObject> PrefabAsset { get; private set; }
 
         [field: SerializeField]
         public SpawnScene Scene { get; private set; }
+
+        [field: SerializeField]
+        public bool InheritParent { get; private set; }
+
+        [field: SerializeField]
+        public DestroyOnCompleteObject DestroyOnComplete { get; private set; } = DestroyOnCompleteObject.GameObject;
 
         public event Action<PrefabAssetSpawner, GameObject> Spawned;
 
@@ -44,10 +56,25 @@ namespace SpaceTrader.Util.AddressableUtils {
                     SceneManager.MoveGameObjectToScene(instance, this.gameObject.scene);
                 }
 
+                var parent = transform.parent;
+                if (this.InheritParent && parent) {
+                    instance.transform.SetParent(parent, true);
+
+                    instance.transform.SetSiblingIndex(transform.GetSiblingIndex());
+                }
+
                 this.Spawned?.Invoke(this, instance);
             }
 
-            Destroy(this.gameObject);
+            switch (this.DestroyOnComplete) {
+                case DestroyOnCompleteObject.Component:
+                    Destroy(this);
+                    break;
+
+                case DestroyOnCompleteObject.GameObject:
+                    Destroy(this.gameObject);
+                    break;
+            }
         }
 
 #if UNITY_EDITOR
