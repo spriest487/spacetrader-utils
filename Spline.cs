@@ -38,13 +38,14 @@ namespace SpaceTrader.Util {
 
         public static Spline FromSegments(
             Vector3 start,
-            IReadOnlyCollection<Segment> segments,
+            IReadOnlyList<Segment> segments,
             int steps = DefaultSteps
         ) {
             var positions = new List<Vector3>(1 + segments.Count * steps);
             positions.Add(start);
 
-            foreach (var segment in segments) {
+            for (var s = 0; s < segments.Count; s++) {
+                var segment = segments[s];
                 for (var step = 1; step <= steps; ++step) {
                     var time = step / (float)steps;
                     var pos = CubicBezier(time, start, segment.StartTangent, segment.EndTangent, segment.End);
