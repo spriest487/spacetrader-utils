@@ -1,11 +1,11 @@
-﻿using System;
+﻿#if UNITY_ADDRESSABLES
+
+using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
-
-#if ADDRESSABLES
 
 namespace SpaceTrader.Util.AddressableUtils {
     [Serializable]

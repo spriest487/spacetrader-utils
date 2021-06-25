@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_ADDRESSABLES
+
+using System;
 using System.Collections;
 using System.Linq;
 using JetBrains.Annotations;
@@ -116,3 +118,5 @@ namespace SpaceTrader.Util.AddressableUtils {
 #endif
     }
 }
+
+#endif
