@@ -10,12 +10,14 @@ namespace PSPSPSPS {
     public class Spawner<T> : IDisposable where T : NetworkBehaviour {
         private readonly NetworkManager networkManager;
 
-        private T prefab;
-        private ulong prefabHash;
+        private readonly T prefab;
+        private readonly ulong prefabHash;
 
         public event Action<T> Spawned;
 
         public Spawner(NetworkManager networkManager) {
+            this.networkManager = networkManager;
+
             for (var i = 0; i < networkManager.NetworkConfig.NetworkPrefabs.Count; i++) {
                 var networkPrefab = networkManager.NetworkConfig.NetworkPrefabs[i];
                 if (!this.prefab && networkPrefab.Prefab.TryGetComponent(out T prefab)) {
@@ -63,11 +65,16 @@ namespace PSPSPSPS {
                     instance.NetworkObject.Spawn(destroyWithScene: destroyWithScene);
                 }
 
+                this.Spawned?.Invoke(instance);
+
                 return instance;
             }
 
             if (!this.networkManager.IsClient) {
-                return Object.Instantiate(this.prefab, spawnPos, spawnRot);
+                var instance = Object.Instantiate(this.prefab, spawnPos, spawnRot);
+                this.Spawned?.Invoke(instance);
+
+                return instance;
             }
 
             return null;
