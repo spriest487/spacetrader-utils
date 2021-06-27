@@ -16,10 +16,14 @@ namespace SpaceTrader.Util {
         public RuleTransitionKind TransitionKind { get; set; }
     }
 
+    public delegate void TransitionRuleTriggeredDelegate(Type stateType, string transitionRuleName);
+
     public class TransitionRuleStateMachine<T> : StateMachine<T> where T : IStateMachineState<T> {
         private delegate void TransitionRuleDelegate(T fromState, ref RuleTransition<T> transition);
 
         private readonly Dictionary<Type, List<TransitionRuleDelegate>> transitionRules;
+
+        public event TransitionRuleTriggeredDelegate RuleTriggered;
 
         public TransitionRuleStateMachine(T defaultState) : base(defaultState) {
             this.transitionRules = new Dictionary<Type, List<TransitionRuleDelegate>>(8);
@@ -54,6 +58,8 @@ namespace SpaceTrader.Util {
                             using var profilerSegment = new ProfilerSegment("TransitionRuleStateMachine - Execute Transition Rule");
                             var result = (bool)method.Invoke(fromState, null);
                             if (result) {
+                                this.RuleTriggered?.Invoke(stateType, method.Name);
+
                                 ruleTransition.TransitionKind = RuleTransitionKind.Pop;
                                 ruleTransition.ToState = default;
                             }
@@ -70,6 +76,8 @@ namespace SpaceTrader.Util {
                             using var profilerSegment = new ProfilerSegment("TransitionRuleStateMachine - Execute Transition Rule");
 
                             if (method.Invoke(fromState, null) is T toState) {
+                                this.RuleTriggered?.Invoke(stateType, method.Name);
+
                                 ruleTransition.TransitionKind = ruleAttribute.TransitionKind;
                                 ruleTransition.ToState = toState;
                             }
@@ -92,15 +100,17 @@ namespace SpaceTrader.Util {
                     break;
                 }
 
-                var transition = new RuleTransition<T>();
-                if (this.transitionRules.TryGetValue(currentState.GetType(), out var rulesList)) {
-                    foreach (var rule in rulesList) {
-                        rule(currentState, ref transition);
+                if (!this.transitionRules.TryGetValue(currentState.GetType(), out var rulesList)) {
+                    continue;
+                }
 
-                        if (this.DoTransition(ref transition)) {
-                            anyTransition = true;
-                            break;
-                        }
+                var transition = new RuleTransition<T>();
+                foreach (var rule in rulesList) {
+                    rule(currentState, ref transition);
+
+                    if (this.DoTransition(ref transition)) {
+                        anyTransition = true;
+                        break;
                     }
                 }
             } while (anyTransition);
