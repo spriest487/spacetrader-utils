@@ -8,7 +8,7 @@ namespace SpaceTrader.Util {
         [field: SerializeField]
         public Camera Camera { get; set; }
 
-        private void Update() {
+        private void LateUpdate() {
             var camera = this.Camera ? this.Camera : Camera.main;
             if (!camera) {
                 return;
@@ -25,6 +25,11 @@ namespace SpaceTrader.Util {
 
             this.transform.LookAt(this.transform.position + camRotation * Vector3.forward,
                 camRotation * up);
+        }
+
+        [ContextMenu("Apply Rotation Now")]
+        private void ApplyRotationNow() {
+            this.LateUpdate();
         }
     }
 }
