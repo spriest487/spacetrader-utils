@@ -1,6 +1,7 @@
 ﻿#if UNITY_MLAPI
 
 using System;
+using System.Collections.Generic;
 using MLAPI;
 using MLAPI.Spawning;
 using UnityEngine;
@@ -78,6 +79,18 @@ namespace PSPSPSPS {
             }
 
             return null;
+        }
+
+        public IEnumerable<T> GetSpawnedInstances() {
+            foreach (var spawnedObj in NetworkSpawnManager.SpawnedObjectsList) {
+                if (!spawnedObj) {
+                    continue;
+                }
+
+                if (spawnedObj.PrefabHash == this.prefabHash && spawnedObj.TryGetComponent(out T instance)) {
+                    yield return instance;
+                }
+            }
         }
     }
 }
