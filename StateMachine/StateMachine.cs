@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace SpaceTrader.Util {
     public delegate void StateTransitionDelegate<T>(in StateTransition<T> transition);
@@ -90,6 +91,7 @@ namespace SpaceTrader.Util {
             this.StateChanged?.Invoke(in transition);
         }
 
+        [DebuggerHidden]
         private static void EnterState(T state, T fromState) {
             try {
                 state?.Enter(fromState);
@@ -98,6 +100,7 @@ namespace SpaceTrader.Util {
             }
         }
 
+        [DebuggerHidden]
         private static void RestoreState(T state, T fromState) {
             try {
                 state?.Restore(fromState);
@@ -106,6 +109,7 @@ namespace SpaceTrader.Util {
             }
         }
 
+        [DebuggerHidden]
         private static void SuspendState(T state, T toState) {
             try {
                 state?.Suspend(toState);
@@ -114,6 +118,7 @@ namespace SpaceTrader.Util {
             }
         }
 
+        [DebuggerHidden]
         private static void ExitState(T state, T toState) {
             try {
                 state?.Exit(toState);
