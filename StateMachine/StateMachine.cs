@@ -96,7 +96,7 @@ namespace SpaceTrader.Util {
             try {
                 state?.Enter(fromState);
             } catch (Exception ex) {
-                Debug.LogErrorFormat("State Enter transition failed: {0}", ex);
+                Debug.LogException(ex);
             }
         }
 
@@ -105,7 +105,7 @@ namespace SpaceTrader.Util {
             try {
                 state?.Restore(fromState);
             } catch (Exception ex) {
-                Debug.LogErrorFormat("State Restore transition failed: {0}", ex);
+                Debug.LogException(ex);
             }
         }
 
@@ -114,7 +114,7 @@ namespace SpaceTrader.Util {
             try {
                 state?.Suspend(toState);
             } catch (Exception ex) {
-                Debug.LogErrorFormat("State Suspend transition failed: {0}", ex);
+                Debug.LogException(ex);
             }
         }
 
@@ -123,7 +123,7 @@ namespace SpaceTrader.Util {
             try {
                 state?.Exit(toState);
             } catch (Exception ex) {
-                Debug.LogErrorFormat("State Exit transition failed: {0}", ex);
+                Debug.LogException(ex);
             }
         }
 
