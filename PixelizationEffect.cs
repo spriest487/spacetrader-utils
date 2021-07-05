@@ -24,6 +24,9 @@ namespace SpaceTrader.Util {
         public int Depth { get; private set; } = 24;
 
         [field: SerializeField]
+        public bool Multisample { get; private set; } = true;
+
+        [field: SerializeField]
         public MatchDimensionOption MatchDimension { get; private set; } = MatchDimensionOption.Height;
 
         [SerializeField]
@@ -33,11 +36,24 @@ namespace SpaceTrader.Util {
 
         private void Start() {
             this.material = new Material(this.shader);
+            if (this.Multisample) {
+                this.material.EnableKeyword("MULTISAMPLE_ON");
+            } else {
+                this.material.DisableKeyword("MULTISAMPLE_ON");
+            }
         }
 
         private void OnValidate() {
             if (!this.shader) {
                 this.shader = Shader.Find(ShaderName);
+            }
+
+            if (this.material) {
+                if (this.Multisample) {
+                    this.material.EnableKeyword("MULTISAMPLE_ON");
+                } else {
+                    this.material.DisableKeyword("MULTISAMPLE_ON");
+                }
             }
         }
 

@@ -3,6 +3,8 @@
         _MainTex ("Texture", 2D) = "white" {}
         _ScaleX ("Scale X", Float) = 2
         _ScaleY ("Scale Y", Float) = 2
+
+        [Toggle(MULTISAMPLE)] _Multisample ("Multisample", Float) = 1
     }
     SubShader {
         Cull Off ZWrite Off ZTest Always
@@ -11,6 +13,8 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+
+            #pragma multi_compile_local __ MULTISAMPLE_ON
 
             #include "UnityCG.cginc"
 
@@ -45,15 +49,18 @@
                 float2 position = float2(x, y);
 
                 fixed4 avg_color = tex2D(_MainTex, position + block_size / 2);
-				avg_color += tex2D(_MainTex, position + float2(block_size.x / 4, block_size.y / 4));
-				avg_color += tex2D(_MainTex, position + float2(block_size.x / 2, block_size.y / 4));
-				avg_color += tex2D(_MainTex, position + float2((block_size.x / 4) * 3, block_size.y / 4));
-				avg_color += tex2D(_MainTex, position + float2(block_size.x / 4, block_size.y / 2));
-				avg_color += tex2D(_MainTex, position + float2((block_size.x / 4) * 3, block_size.y / 2));
-				avg_color += tex2D(_MainTex, position + float2(block_size.x / 4, (block_size.y / 4) * 3));
-				avg_color += tex2D(_MainTex, position + float2(block_size.x / 2, (block_size.y / 4) * 3));
-				avg_color += tex2D(_MainTex, position + float2((block_size.x / 4) * 3, (block_size.y / 4) * 3));
-				avg_color /= 9;
+
+#ifdef MULTISAMPLE_ON
+                avg_color += tex2D(_MainTex, position + float2(block_size.x / 4, block_size.y / 4));
+                avg_color += tex2D(_MainTex, position + float2(block_size.x / 2, block_size.y / 4));
+                avg_color += tex2D(_MainTex, position + float2((block_size.x / 4) * 3, block_size.y / 4));
+                avg_color += tex2D(_MainTex, position + float2(block_size.x / 4, block_size.y / 2));
+                avg_color += tex2D(_MainTex, position + float2((block_size.x / 4) * 3, block_size.y / 2));
+                avg_color += tex2D(_MainTex, position + float2(block_size.x / 4, (block_size.y / 4) * 3));
+                avg_color += tex2D(_MainTex, position + float2(block_size.x / 2, (block_size.y / 4) * 3));
+                avg_color += tex2D(_MainTex, position + float2((block_size.x / 4) * 3, (block_size.y / 4) * 3));
+                avg_color /= 9;
+#endif
 
                 return avg_color;
             }
