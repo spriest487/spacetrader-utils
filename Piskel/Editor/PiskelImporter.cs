@@ -71,6 +71,9 @@ namespace SpaceTrader.Util {
         private TextureWrapMode wrapMode = TextureWrapMode.Clamp;
 
         [SerializeField]
+        private bool alphaIsTransparency = true;
+
+        [SerializeField]
         private Vector2 spritePivot = new Vector2(0.5f, 0.5f);
 
         [SerializeField]
@@ -142,6 +145,7 @@ namespace SpaceTrader.Util {
                 var compositeTexture = new Texture2D(layerWidth, layerHeight, TextureFormat.RGBA32, false) {
                     filterMode = FilterMode.Point,
                     wrapMode = this.wrapMode,
+                    alphaIsTransparency = this.alphaIsTransparency,
                 };
                     
                 for (var y = 0; y < compositeTexture.height; y += 1)
