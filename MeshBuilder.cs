@@ -34,12 +34,15 @@ namespace SpaceTrader.Util {
             this.vertices.Add(position);
 
             if (normal.HasValue) {
+                Fill(this.normals, this.vertices.Count - 1);
                 this.normals.Add(normal.Value);
             }
             if (texCoord0.HasValue) {
+                Fill(this.texCoords0, this.vertices.Count - 1);
                 this.texCoords0.Add(texCoord0.Value);
             }
             if (color.HasValue) {
+                Fill(this.colors, this.vertices.Count - 1);
                 this.colors.Add(color.Value);
             }
 
@@ -78,13 +81,13 @@ namespace SpaceTrader.Util {
             indices.Add(v3);
         }
 
-        public void Build(Mesh mesh) {
-            void Fill<T>(List<T> list, int size) {
-                while (list.Count < size) {
-                    list.Add(default);
-                }
+        private static void Fill<T>(List<T> list, int size) {
+            while (list.Count < size) {
+                list.Add(default);
             }
+        }
 
+        public void Build(Mesh mesh) {
             mesh.Clear();
             mesh.SetVertices(this.vertices);
             
