@@ -3,21 +3,21 @@ using UnityEngine;
 
 namespace SpaceTrader.Util {
     public class SubmeshTextureMap {
-        private readonly Dictionary<Texture2D, int> submeshByTexture;
+        private readonly Dictionary<Texture, int> submeshByTexture;
 
-        private readonly List<Texture2D> textures;
-        public IReadOnlyList<Texture2D> Textures => this.textures;
+        private readonly List<Texture> textures;
+        public IReadOnlyList<Texture> Textures => this.textures;
 
         private int nextIndex;
 
         public SubmeshTextureMap() {
-            this.submeshByTexture = new Dictionary<Texture2D, int>();
-            this.textures = new List<Texture2D>();
+            this.submeshByTexture = new Dictionary<Texture, int>();
+            this.textures = new List<Texture>();
 
             this.nextIndex = 0;
         }
         
-        public int GetSubmeshIndex(Texture2D texture) {
+        public int GetSubmeshIndex(Texture texture) {
             if (this.submeshByTexture.TryGetValue(texture, out var index)) {
                 return index;
             }
