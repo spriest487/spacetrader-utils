@@ -99,6 +99,21 @@ namespace SpaceTrader.Util {
             return rect;
         }
 
+        public static void Encapsulate(this ref BoundsInt bounds, Vector3Int point) {
+            var min = bounds.min;
+            var max = bounds.max;
+
+            min.x = Mathf.Min(point.x, min.x);
+            min.y = Mathf.Min(point.y, min.y);
+            min.z = Mathf.Min(point.z, min.z);
+            max.x = Mathf.Max(point.x, max.x);
+            max.y = Mathf.Max(point.y, max.y);
+            max.z = Mathf.Max(point.z, max.z);
+
+            bounds.min = min;
+            bounds.max = max;
+        }
+
         public static Rect Expand(this Rect rect, Vector2 distance) {
             rect.xMin -= distance.x;
             rect.xMax += distance.x;
