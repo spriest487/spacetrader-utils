@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
     [Serializable]
+    [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
     public struct LineSegment2D : IEquatable<LineSegment2D> {
         [field: SerializeField]
         public Vector2 Origin { get; private set; }
