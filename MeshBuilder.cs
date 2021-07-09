@@ -12,6 +12,7 @@ namespace SpaceTrader.Util {
         private readonly List<Vector3> vertices;
         private readonly List<Vector3> normals;
         private readonly List<Vector2> texCoords0;
+        private readonly List<Vector2> texCoords1;
         private readonly List<Color> colors;
 
         private readonly List<Submesh> submeshes;
@@ -20,6 +21,7 @@ namespace SpaceTrader.Util {
             this.vertices = new List<Vector3>();
             this.normals = new List<Vector3>();
             this.texCoords0 = new List<Vector2>();
+            this.texCoords1 = new List<Vector2>();
             this.colors = new List<Color>();
             
             this.submeshes = new List<Submesh>();
@@ -47,6 +49,12 @@ namespace SpaceTrader.Util {
             }
 
             return this.vertices.Count - 1;
+        }
+
+        public void AddTexCoord1(Vector2 texCoord) {
+            var index = this.vertices.Count - 1;
+            Fill(this.texCoords1, this.vertices.Count - 1);
+            this.texCoords1.Add(texCoord);
         }
 
         private void EnsureSubmeshExists(int index, MeshTopology topology) {
@@ -115,6 +123,11 @@ namespace SpaceTrader.Util {
             if (this.texCoords0.Count != 0) {
                 Fill(this.texCoords0, this.vertices.Count);
                 mesh.SetUVs(0, this.texCoords0);
+            }
+
+            if (this.texCoords1.Count != 0) {
+                Fill(this.texCoords1, this.vertices.Count);
+                mesh.SetUVs(1, this.texCoords1);
             }
             
             mesh.subMeshCount = this.submeshes.Count(s => s.indices.Count > 0);
