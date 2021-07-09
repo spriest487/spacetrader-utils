@@ -71,14 +71,25 @@ namespace SpaceTrader.Util {
             indices.Add(v2);
         }
         
-        public void EmitQuad(int submesh, int v0, int v1, int v2, int v3) {
-            this.EnsureSubmeshExists(submesh, MeshTopology.Quads);
+        public void EmitQuad(int submesh, int v0, int v1, int v2, int v3, bool emitTris = false) {
+            if (emitTris) {
+                this.EnsureSubmeshExists(submesh, MeshTopology.Triangles);
+                var indices = this.submeshes[submesh].indices;
+                indices.Add(v0);
+                indices.Add(v1);
+                indices.Add(v2);
 
-            var indices = this.submeshes[submesh].indices;
-            indices.Add(v0);
-            indices.Add(v1);
-            indices.Add(v2);
-            indices.Add(v3);
+                indices.Add(v0);
+                indices.Add(v2);
+                indices.Add(v3);
+            } else {
+                this.EnsureSubmeshExists(submesh, MeshTopology.Quads);
+                var indices = this.submeshes[submesh].indices;
+                indices.Add(v0);
+                indices.Add(v1);
+                indices.Add(v2);
+                indices.Add(v3);
+            }
         }
 
         private static void Fill<T>(List<T> list, int size) {
