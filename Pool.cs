@@ -84,8 +84,8 @@ namespace SpaceTrader.Util {
         }
 
         public void ReturnAll() {
-            foreach (var item in this.active) {
-                this.Return(item);
+            while (this.active.Count > 0) {
+                this.Return(this.active.First.Value);
             }
         }
 
