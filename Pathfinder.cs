@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine.Profiling;
 
 namespace SpaceTrader.Util {
@@ -46,24 +47,10 @@ namespace SpaceTrader.Util {
             this.neighbors = new List<Neighbor>();
         }
 
-        public void FilterReachable(
-            TNode origin,
-            IList<TNode> tiles,
-            Func<TNode, bool> tileFilter,
-            int maxLength = -1
-        ) {
-            for (var i = tiles.Count - 1; i >= 0; --i) {
-                if (!this.FindPath(origin, tiles[i], tileFilter, maxLength)) {
-                    tiles.RemoveAt(i);
-                }
-            }
-        }
-
         public bool FindPath(
             TNode origin,
             TNode destination,
-            Func<TNode, bool> tileFilter = null,
-            int maxLength = -1,
+            float maxDist,
             List<TNode> outPath = null
         ) {
             Profiler.BeginSample("Pathfinder.FindPath");
@@ -94,14 +81,19 @@ namespace SpaceTrader.Util {
                 
                 if (current.Equals(destination)) {
                     Profiler.EndSample();
-                    return this.ReconstructPath(current, outPath, maxLength);
+
+                    if (outPath != null) {
+                        this.ReconstructPath(current, outPath);
+                    }
+
+                    return true;
                 }
 
                 this.openSet.Remove(current);
                 this.closedSet.Add(current);
 
                 this.neighbors.Clear();
-                this.FindNeighbors(current, tileFilter, this.neighbors);
+                this.FindNeighbors(current, this.neighbors);
                 foreach (var neighbor in this.neighbors) {
                     if (this.closedSet.Contains(neighbor.Node)) {
                         // neighbor is already evaluated
@@ -109,19 +101,19 @@ namespace SpaceTrader.Util {
                     }
 
                     // the distance from start to a neighbor
-                    var tentativeGScore = ScoreOrInfinity(this.gScore, current) + neighbor.Distance;
+                    var neighborGScore = ScoreOrInfinity(this.gScore, current) + neighbor.Distance;
 
-                    if (!this.openSet.Contains(neighbor.Node)) {
+                    if (!this.openSet.Contains(neighbor.Node) && neighborGScore <= maxDist) {
                         this.openSet.Add(neighbor.Node);
-                    } else if (tentativeGScore >= ScoreOrInfinity(this.gScore, neighbor.Node)) {
+                    } else if (neighborGScore >= ScoreOrInfinity(this.gScore, neighbor.Node)) {
                         // this is not a better path
                         continue;
                     }
 
                     // this path is the best until now, record it
                     this.cameFrom[neighbor.Node] = current;
-                    this.gScore[neighbor.Node] = tentativeGScore;
-                    this.fScore[neighbor.Node] = tentativeGScore + this.Heuristic(neighbor.Node, destination);
+                    this.gScore[neighbor.Node] = neighborGScore;
+                    this.fScore[neighbor.Node] = neighborGScore + this.Heuristic(neighbor.Node, destination);
                 }
             }
 
@@ -130,39 +122,64 @@ namespace SpaceTrader.Util {
             return false;
         }
 
-        private bool ReconstructPath(
+        public void FindOpenNodes(TNode origin, float maxDist, List<TNode> outNodes) {
+            outNodes.Clear();
+
+            this.closedSet.Clear();
+            this.openSet.Clear();
+            this.gScore.Clear();
+
+            this.openSet.Add(origin);
+            this.gScore[origin] = 0f;
+
+            while (true) {
+                TNode current;
+                using (var openSetIt = this.openSet.GetEnumerator()) {
+                    if (!openSetIt.MoveNext()) {
+                        break;
+                    }
+                    current = openSetIt.Current;
+                }
+
+                this.openSet.Remove(current);
+                // this.closedSet.Add(current);
+                var currentScore = this.gScore[current!];
+
+                this.neighbors.Clear();
+                this.FindNeighbors(current, this.neighbors);
+                foreach (var neighbor in this.neighbors) {
+                    var neighborScore = currentScore + neighbor.Distance;
+
+                    if (this.gScore.TryGetValue(neighbor.Node, out var prevScore) && prevScore <= neighborScore) {
+                        continue;
+                    }
+
+                    if (neighborScore <= maxDist) {
+                        this.openSet.Add(neighbor.Node);
+                        this.gScore[neighbor.Node] = neighborScore;
+
+                        outNodes.Add(neighbor.Node);
+                    }
+                }
+            }
+        }
+
+        private void ReconstructPath(
             TNode current,
-            List<TNode> outPath,
-            int maxLength
+            List<TNode> outPath
         ) {
             Profiler.BeginSample("Pathfinder.ReconstructPath");
 
-            outPath?.Clear();
-            outPath?.Add(current);
-
-            /* outPath is null if we're checking without storing the result,
-            or we could just use outPath.Count, so count the number of steps
-            separately. this starts at 0 instead of 1 because we consider a path
-            of one point to have length 0 */
-            var count = 0;
+            outPath.Clear();
+            outPath.Add(current);
 
             while (this.cameFrom.TryGetValue(current, out current)) {
-                // reached max length, shortest path is too long
-                if (maxLength >= 0 && count == maxLength) {
-                    outPath?.Clear();
-                    Profiler.EndSample();
-                    return false;
-                }
-
-                outPath?.Add(current);
-                ++count;
+                outPath.Add(current);
             }
 
-            outPath?.Reverse();
+            outPath.Reverse();
 
             Profiler.EndSample();
-
-            return true;
         }
 
         private static float ScoreOrInfinity(
@@ -181,7 +198,6 @@ namespace SpaceTrader.Util {
 
         protected abstract void FindNeighbors(
             TNode point,
-            Func<TNode, bool> tileFilter,
             List<Neighbor> outNeighbors
         );
     }
