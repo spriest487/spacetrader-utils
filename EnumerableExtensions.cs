@@ -106,5 +106,39 @@ namespace SpaceTrader.Util {
             k = group.Key;
             v = group;
         }
+
+        public static IEnumerable<(T, T)> Windows2<T>(this IEnumerable<T> items) {
+            using var enumerator = items.GetEnumerator();
+            if (!enumerator.MoveNext()) {
+                yield break;
+            }
+
+            var prev = enumerator.Current;
+
+            while (enumerator.MoveNext()) {
+                yield return (prev, enumerator.Current);
+                prev = enumerator.Current;
+            }
+        }
+        
+        public static IEnumerable<(T, T, T)> Windows3<T>(this IEnumerable<T> items) {
+            using var enumerator = items.GetEnumerator();
+            
+            if (!enumerator.MoveNext()) {
+                yield break;
+            }
+            var prev0 = enumerator.Current;
+            
+            if (!enumerator.MoveNext()) {
+                yield break;
+            }
+            var prev1 = enumerator.Current;
+
+            while (enumerator.MoveNext()) {
+                yield return (prev0, prev1, enumerator.Current);
+                prev0 = prev1;
+                prev1 = enumerator.Current;
+            }
+        }
     }
 }
