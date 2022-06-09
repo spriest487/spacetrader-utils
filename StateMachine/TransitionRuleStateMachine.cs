@@ -29,14 +29,22 @@ namespace SpaceTrader.Util {
             this.transitionRules = new Dictionary<Type, List<TransitionRuleDelegate>>(8);
 
             this.BeforeStateChange += this.OnBeforeStateChange;
+
+            if (this.DefaultState != null) {
+                this.ProcessTransitionRules(this.DefaultState);
+            }
         }
 
         private void OnBeforeStateChange(in StateTransition<T> transition) {
-            if (!(transition.NextState is {} nextState)) {
+            if (transition.NextState is not { } nextState) {
                 return;
             }
 
-            var stateType = nextState.GetType();
+            this.ProcessTransitionRules(nextState);
+        }
+
+        private void ProcessTransitionRules(T state) {
+            var stateType = state.GetType();
             if (this.transitionRules.TryGetValue(stateType, out var rulesList)) {
                 return;
             }
@@ -48,7 +56,7 @@ namespace SpaceTrader.Util {
                 | BindingFlags.Public
                 | BindingFlags.NonPublic;
             foreach (var method in stateType.GetMethods(ruleMethodBindingFlags)) {
-                if (!(method.GetCustomAttribute<TransitionRuleAttribute>() is { } ruleAttribute)) {
+                if (method.GetCustomAttribute<TransitionRuleAttribute>() is not { } ruleAttribute) {
                     continue;
                 }
 
