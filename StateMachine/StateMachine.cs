@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
@@ -6,7 +7,7 @@ using Debug = UnityEngine.Debug;
 namespace SpaceTrader.Util {
     public delegate void StateTransitionDelegate<T>(in StateTransition<T> transition);
 
-    public class StateMachine<T> where T : IStateMachineState<T> {
+    public class StateMachine<T> : IReadOnlyCollection<T> where T : IStateMachineState<T> {
 #if ODIN_INSPECTOR
         [Sirenix.OdinInspector.ShowInInspector]
         [Sirenix.OdinInspector.ListDrawerSettings(IsReadOnly = true)]
@@ -145,5 +146,11 @@ namespace SpaceTrader.Util {
 
             this.Replace(newState);
         }
+        
+        public Stack<T>.Enumerator GetEnumerator() => this.stack.GetEnumerator();
+        
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.GetEnumerator();
+        
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 }
