@@ -11,8 +11,10 @@ namespace SpaceTrader.Util {
     public class TransitionStateMachineBehaviour : StateMachineBehaviour {
         [SerializeField]
         private TransitionStateDirection direction;
-        public const string DirectionPropertyName = nameof(direction);
 
+#if ODIN_INSPECTOR
+        [Sirenix.OdinInspector.ShowInInspector]
+#endif
         private bool done;
 
         public event Action<TransitionStateDirection> StateCompleted;
@@ -23,6 +25,15 @@ namespace SpaceTrader.Util {
             base.OnStateEnter(animator, stateInfo, layerIndex);
 
             this.done = false;
+        }
+
+        public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+            base.OnStateExit(animator, stateInfo, layerIndex);
+
+            if (!this.done) {
+                this.StateCompleted?.Invoke(this.direction);
+                this.done = true;
+            }
         }
 
         public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
