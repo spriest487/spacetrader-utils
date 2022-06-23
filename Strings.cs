@@ -6,8 +6,7 @@ using System.Text;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
-    public class Strings : ScriptableObject,
-        IReadOnlyDictionary<string, string> {
+    public class Strings : ScriptableObject, IReadOnlyDictionary<string, string> {
         [Serializable]
         private struct Entry {
             public string key;
@@ -15,7 +14,10 @@ namespace SpaceTrader.Util {
         }
 
         [SerializeField]
-        private Entry[] entries = new Entry[0];
+        private Entry[] entries = Array.Empty<Entry>();
+
+        [field: SerializeField]
+        public string MissingKeyFormat { get; set; } = "";
 
         private Dictionary<string, string> map;
 
@@ -35,8 +37,9 @@ namespace SpaceTrader.Util {
                     return val;
                 }
 
-                var lastGroup = key.LastIndexOf('.');
-                return key.Substring(lastGroup + 1);
+                var lastGroupIndex = key.LastIndexOf('.') + 1;
+                var lastGroup = key[lastGroupIndex..];
+                return string.Format(this.MissingKeyFormat, lastGroup);
             }
         }
 

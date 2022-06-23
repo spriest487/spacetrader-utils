@@ -6,11 +6,14 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEditor.Callbacks;
-
+using UnityEngine;
 
 namespace SpaceTrader.Util.EditorUtil {
     [ScriptedImporter(1, "ini")]
     public class StringsImporter : ScriptedImporter {
+        [SerializeField]
+        private string missingKeyFormat = "";
+        
         [OnOpenAsset]
         private static bool HandleOpen(int instanceID, int line) {
             var strings = EditorUtility.InstanceIDToObject(instanceID) as Strings;
@@ -113,6 +116,7 @@ namespace SpaceTrader.Util.EditorUtil {
             }
 
             var strings = Strings.Create(stringsMap);
+            strings.MissingKeyFormat = this.missingKeyFormat;
 
             ctx.AddObjectToAsset(Path.GetFileName(ctx.assetPath), strings);
             ctx.SetMainObject(strings);
