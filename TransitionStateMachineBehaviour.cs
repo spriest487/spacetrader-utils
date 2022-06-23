@@ -16,6 +16,8 @@ namespace SpaceTrader.Util {
         [Sirenix.OdinInspector.ShowInInspector]
 #endif
         private bool done;
+        
+        public bool Done => this.done;
 
         public event Action<TransitionStateDirection> StateCompleted;
 
