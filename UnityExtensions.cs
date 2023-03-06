@@ -12,12 +12,12 @@ namespace SpaceTrader.Util {
             return new Vector2(vector3.x, vector3.z);
         }
 
-        public static Vector3 ToXY(this Vector2 vector2) {
-            return new Vector3(vector2.x, vector2.y, 0);
+        public static Vector3 ToXY(this Vector2 vector2, float z = 0f) {
+            return new Vector3(vector2.x, vector2.y, z);
         }
 
-        public static Vector3 ToXZ(this Vector2 vector2) {
-            return new Vector3(vector2.x, 0, vector2.y);
+        public static Vector3 ToXZ(this Vector2 vector2, float y = 0f) {
+            return new Vector3(vector2.x, y, vector2.y);
         }
 
         public static Vector2Int XY(this Vector3Int vector3i) {
