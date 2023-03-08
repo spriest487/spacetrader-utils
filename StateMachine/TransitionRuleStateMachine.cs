@@ -125,7 +125,13 @@ namespace SpaceTrader.Util {
                     }
                 }
 
-                var result = (bool)method.Invoke(fromState, null);
+                bool result;
+                if (method.ReturnType == typeof(void)) {
+                    result = true;
+                } else {
+                    result = (bool)method.Invoke(fromState, null);
+                }
+
                 if (result) {
                     try {
                         this.RuleTriggered?.Invoke(stateType, method.Name);
