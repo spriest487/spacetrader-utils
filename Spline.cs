@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
-    [Serializable]
-    public struct Spline {
+    public readonly struct Spline {
         [Serializable]
         public struct Segment {
             public Vector3 StartTangent;
@@ -14,48 +14,119 @@ namespace SpaceTrader.Util {
 
         public const int DefaultSteps = 5;
 
-        private static Vector3[] EmptyPositions = new Vector3[0];
+        private readonly Vector3[] positions;
+        private readonly float[] distances;
 
-        [HideInInspector, SerializeField]
-        private List<Vector3> positions;
+        public float Length { get; }
 
-        public IReadOnlyList<Vector3> Positions => this.positions ?? (IReadOnlyList<Vector3>)EmptyPositions;
+        public IReadOnlyList<Vector3> Positions => this.positions ?? (IReadOnlyList<Vector3>)Array.Empty<Vector3>();
+
+        private Spline([NotNull] Vector3[] positions, [CanBeNull] float[] distances, float length) {
+            this.positions = positions;
+            this.distances = distances;
+            this.Length = length;
+        }
 
         public Vector3 Evaluate(float time) {
-            if (this.positions == null) {
+            if (this.positions == null || this.positions.Length == 0) {
                 return Vector3.zero;
             }
 
-            var findex = (this.positions.Count - 1) * time;
+            if (time <= 0f) {
+                return this.positions[0];
+            }
 
-            var index = Mathf.Clamp(Mathf.FloorToInt(findex), 0, this.positions.Count - 1);
-            var nextIndex = Mathf.Min(index + 1, this.positions.Count - 1);
+            if (time >= 1f) {
+                return this.positions[^1];
+            }
 
-            var fraction = findex % 1.0f;
+            var nearestIndex = (this.positions.Length - 1) * time;
+            var index = Mathf.FloorToInt(nearestIndex);
 
-            return Vector3.Lerp(this.positions[index], this.positions[nextIndex], fraction);
+            if (this.distances != null) {
+                while (index > 1 && this.distances[index] >= time) {
+                    index -= 1;
+                }
+
+                while (index < this.distances.Length - 1 && this.distances[index + 1] < time) {
+                    index += 1;
+                }
+            }
+
+            var startPos = this.positions[index];
+            var endPos = this.positions[index + 1];
+
+            float fraction;
+            if (this.distances != null) {
+                var startDist = this.distances[index];
+                var endDist = this.distances[index + 1];
+
+                fraction = Mathf.InverseLerp(startDist, endDist, time);
+            } else {
+                fraction = nearestIndex % 1.0f;
+            }
+
+            return Vector3.LerpUnclamped(startPos, endPos, fraction);
         }
 
         public static Spline FromSegments(
             Vector3 start,
-            IReadOnlyList<Segment> segments,
-            int steps = DefaultSteps
+            ReadOnlySpan<Segment> segments,
+            int steps = DefaultSteps,
+            bool calculateDistances = false
         ) {
-            var positions = new List<Vector3>(1 + segments.Count * steps);
-            positions.Add(start);
+            if (segments.Length == 0 || steps <= 0) {
+                return new Spline(new[] { start }, distances: new[] { 0f }, 0f);
+            }
 
-            for (var s = 0; s < segments.Count; s++) {
+            var capacity = 1 + segments.Length * steps;
+
+            var positions = new Vector3[capacity];
+            var distances = calculateDistances ? new float[capacity] : null;
+            
+            positions[0] = start;
+
+            var length = 0f;
+
+            var posIndex = 1;
+            
+            for (var s = 0; s < segments.Length; s += 1) {
                 var segment = segments[s];
-                for (var step = 1; step <= steps; ++step) {
+                for (var step = 1; step <= steps; step += 1) {
                     var time = step / (float)steps;
                     var pos = CubicBezier(time, start, segment.StartTangent, segment.EndTangent, segment.End);
-                    positions.Add(pos);
+                    positions[posIndex] = pos;
+
+                    if (distances != null) {
+                        var distanceBetween = Vector3.Distance(pos, positions[posIndex - 1]);
+                        length += distanceBetween;
+
+                        // the stored distance used for interpolation is cumulative
+                        distances[posIndex] = distances[posIndex - 1] + distanceBetween;
+                    }
+                    
+                    posIndex += 1;
                 }
 
                 start = segment.End;
             }
 
-            return new Spline { positions = positions };
+            // distances are stored normalized
+            if (distances != null && length > 0f) {
+                // make sure these values are exact:
+                distances[0] = 0f;
+                if (distances.Length > 1) {
+                    distances[^1] = 1f;
+                }
+
+                for (var i = 1; i < distances.Length - 1; i += 1) {
+                    distances[i] /= length;
+                }
+            } else {
+                length = Vector3.Distance(positions[0], positions[^1]);
+            }
+
+            return new Spline(positions, distances, length);
         }
 
         public static Vector3 CubicBezier(

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace SpaceTrader.Util {
         public static SplineVisualizer Create(
             GameObject obj,
             Vector3 origin,
-            IEnumerable<Spline.Segment> segments,
+            ReadOnlySpan<Spline.Segment> segments,
             int steps = Spline.DefaultSteps,
             float gizmoSize = 1.0f
         ) {
@@ -36,12 +37,17 @@ namespace SpaceTrader.Util {
         private void OnDrawGizmos() {
             var localOrigin = this.transform.TransformPoint(this.origin);
 
-            var localSegments = this.segments.Select(s => new Spline.Segment {
-                    StartTangent = this.transform.TransformPoint(s.StartTangent),
-                    End = this.transform.TransformPoint(s.End),
-                    EndTangent = this.transform.TransformPoint(s.EndTangent)
-                })
-                .ToList();
+            var localSegments = new Spline.Segment[this.segments.Length];
+
+            for (var i = 0; i < this.segments.Length; i += 1) {
+                var segment = this.segments[i];
+                
+                localSegments[i] = new Spline.Segment {
+                    StartTangent = this.transform.TransformPoint(segment.StartTangent),
+                    End = this.transform.TransformPoint(segment.End),
+                    EndTangent = this.transform.TransformPoint(segment.EndTangent),
+                };
+            }
 
             foreach (var segment in localSegments) {
                 Gizmos.color = Color.green;
