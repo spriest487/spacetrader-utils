@@ -52,6 +52,10 @@ namespace SpaceTrader.Util.EditorUtil {
             var ns = AutoLayersPrefs.Namespace;
 
             using (var writer = saveFile.CreateText()) {
+                writer.WriteLine("// ReSharper disable EnumUnderlyingTypeIsInt");
+                writer.WriteLine("// ReSharper disable UnusedMember.Global");
+                writer.WriteLine("// ReSharper disable RedundantVerbatimPrefix");
+                
                 if (!string.IsNullOrWhiteSpace(ns)) {
                     writer.WriteLine("namespace {0} {{", ns);
                 }

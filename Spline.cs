@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -19,7 +18,7 @@ namespace SpaceTrader.Util {
 
         public float Length { get; }
 
-        public IReadOnlyList<Vector3> Positions => this.positions ?? (IReadOnlyList<Vector3>)Array.Empty<Vector3>();
+        public ReadOnlySpan<Vector3> Positions => this.positions;
 
         private Spline([NotNull] Vector3[] positions, [CanBeNull] float[] distances, float length) {
             this.positions = positions;

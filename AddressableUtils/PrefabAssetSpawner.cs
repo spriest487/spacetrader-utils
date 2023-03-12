@@ -2,12 +2,15 @@
 
 using System;
 using System.Collections;
-using System.Linq;
 using JetBrains.Annotations;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
+
+#if UNITY_EDITOR
+using System.Linq;
+using UnityEditor;
+#endif
 
 namespace SpaceTrader.Util.AddressableUtils {
     public class PrefabAssetSpawner : MonoBehaviour {

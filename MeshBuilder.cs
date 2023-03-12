@@ -52,7 +52,6 @@ namespace SpaceTrader.Util {
         }
 
         public void AddTexCoord1(Vector2 texCoord) {
-            var index = this.vertices.Count - 1;
             Fill(this.texCoords1, this.vertices.Count - 1);
             this.texCoords1.Add(texCoord);
         }

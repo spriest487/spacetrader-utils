@@ -10,7 +10,7 @@ namespace SpaceTrader.Util.EditorUtil {
         public static string OutputPath {
             get => GetPrefs()?.OutputPath ?? DefaultOutputPath;
             set {
-                var prefs = GetPrefs() ?? new Prefs();
+                var prefs = GetPrefs() ?? new AutoLayersPrefsData();
                 prefs.OutputPath = value ?? "";
                 SetPrefs(prefs);
             }
@@ -19,7 +19,7 @@ namespace SpaceTrader.Util.EditorUtil {
         public static string Namespace {
             get => GetPrefs()?.Namespace ?? GetScriptNamespace();
             set {
-                var prefs = GetPrefs() ?? new Prefs();
+                var prefs = GetPrefs() ?? new AutoLayersPrefsData();
                 prefs.Namespace = value ?? "";
                 SetPrefs(prefs);
             }
@@ -35,7 +35,7 @@ namespace SpaceTrader.Util.EditorUtil {
 
         private const string prefsPath = "AutoLayers/AutoLayersSettings.json";
 
-        private static Prefs GetPrefs() {
+        private static AutoLayersPrefsData GetPrefs() {
             var file = new FileInfo(Path.Combine(Application.dataPath, prefsPath));
             if (!file.Exists) {
                 return null;
@@ -43,13 +43,13 @@ namespace SpaceTrader.Util.EditorUtil {
 
             try {
                 var json = File.ReadAllText(file.FullName);
-                return JsonUtility.FromJson<Prefs>(json);
+                return JsonUtility.FromJson<AutoLayersPrefsData>(json);
             } catch {
                 return null;
             }
         }
 
-        private static void SetPrefs(Prefs prefs) {
+        private static void SetPrefs(AutoLayersPrefsData prefs) {
             var file = new FileInfo(Path.Combine(Application.dataPath, prefsPath));
 
             try {
@@ -62,11 +62,11 @@ namespace SpaceTrader.Util.EditorUtil {
                 Debug.LogException(e);
             }
         }
-
-        [Serializable]
-        private class Prefs {
-            public string OutputPath;
-            public string Namespace;
-        }
+    }
+    
+    [Serializable]
+    internal class AutoLayersPrefsData {
+        public string OutputPath;
+        public string Namespace;
     }
 }

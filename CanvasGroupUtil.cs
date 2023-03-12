@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace SpaceTrader.Util {
     public static class CanvasGroupUtil {
