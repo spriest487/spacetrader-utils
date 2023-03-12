@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
@@ -122,11 +124,13 @@ namespace SpaceTrader.Util {
             return rect;
         }
 
-        public static T GetOrAddComponent<T>(this Component component) where T : Component {
+        public static T GetOrAddComponent<T>(this Component component)
+            where T : Component {
             return GetOrAddComponent<T>(component.gameObject);
         }
 
-        public static T GetOrAddComponent<T>(this GameObject obj) where T : Component {
+        public static T GetOrAddComponent<T>(this GameObject obj)
+            where T : Component {
             if (!obj.TryGetComponent(out T newComponent)) {
                 newComponent = obj.AddComponent<T>();
             }
@@ -212,6 +216,24 @@ namespace SpaceTrader.Util {
             }
 
             return null;
+        }
+
+        public static unsafe void SetPositions(this LineRenderer lineRenderer, ReadOnlySpan<Vector3> positions) {
+            var safety = AtomicSafetyHandle.Create();
+            try {
+                fixed (Vector3* positionsPtr = positions) {
+                    var slice = NativeSliceUnsafeUtility.ConvertExistingDataToNativeSlice<Vector3>(
+                        positionsPtr,
+                        UnsafeUtility.SizeOf<Vector3>(),
+                        positions.Length
+                    );
+                    NativeSliceUnsafeUtility.SetAtomicSafetyHandle(ref slice, safety);
+
+                    lineRenderer.SetPositions(slice);
+                }
+            } finally {
+                AtomicSafetyHandle.Release(safety);
+            }
         }
     }
 }
