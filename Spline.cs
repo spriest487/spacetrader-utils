@@ -16,30 +16,43 @@ namespace SpaceTrader.Util {
         private readonly Vector3[] positions;
         private readonly float[] distances;
 
+        private readonly int count;
+
         public float Length { get; }
 
-        public ReadOnlySpan<Vector3> Positions => this.positions;
+        public ReadOnlySpan<Vector3> Positions {
+            get {
+                if (this.positions == null) {
+                    return default;
+                }
 
-        private Spline([NotNull] Vector3[] positions, [CanBeNull] float[] distances, float length) {
+                return this.positions.AsSpan(0, this.count);
+            }
+        }
+
+        private Spline([NotNull] Vector3[] positions, [CanBeNull] float[] distances, int count, float length) {
             this.positions = positions;
             this.distances = distances;
+            this.count = count;
             this.Length = length;
         }
 
-        public Vector3 Evaluate(float time) {
-            if (this.positions == null || this.positions.Length == 0) {
-                return Vector3.zero;
+        public int EvaluateIndex(float time, out float fractionalPart) {
+            fractionalPart = 0f;
+
+            if (this.positions == null || this.count == 0) {
+                return -1;
             }
 
             if (time <= 0f) {
-                return this.positions[0];
+                return 0;
             }
 
             if (time >= 1f) {
-                return this.positions[^1];
+                return this.count - 1;
             }
-
-            var nearestIndex = (this.positions.Length - 1) * time;
+            
+            var nearestIndex = (this.count - 1) * time;
             var index = Mathf.FloorToInt(nearestIndex);
 
             if (this.distances != null) {
@@ -52,18 +65,27 @@ namespace SpaceTrader.Util {
                 }
             }
 
-            var startPos = this.positions[index];
-            var endPos = this.positions[index + 1];
-
-            float fraction;
             if (this.distances != null) {
                 var startDist = this.distances[index];
                 var endDist = this.distances[index + 1];
 
-                fraction = Mathf.InverseLerp(startDist, endDist, time);
+                fractionalPart = Mathf.InverseLerp(startDist, endDist, time);
             } else {
-                fraction = nearestIndex % 1.0f;
+                fractionalPart = nearestIndex % 1.0f;
             }
+
+            return index;
+        }
+
+        public Vector3 Evaluate(float time) {
+            var index = this.EvaluateIndex(time, out var fraction);
+
+            if (fraction == 0f || index == this.count - 1) {
+                return this.positions[index];
+            }
+
+            var startPos = this.positions[index];
+            var endPos = this.positions[index + 1];
 
             return Vector3.LerpUnclamped(startPos, endPos, fraction);
         }
@@ -74,21 +96,51 @@ namespace SpaceTrader.Util {
             int steps = DefaultSteps,
             bool calculateDistances = false
         ) {
+            var spline = new Spline();
+            CreateFromSegments(ref spline, start, segments, steps, calculateDistances);
+            return spline;
+        }
+
+        public static void CreateFromSegments(
+            ref Spline spline,
+            Vector3 start,
+            ReadOnlySpan<Segment> segments,
+            int steps = DefaultSteps,
+            bool calculateDistances = false
+        ) {
+            var capacity = 1 + segments.Length * steps;
+            
+            var positions = spline.positions;
+            if (positions == null || positions.Length < capacity) {
+                positions = new Vector3[capacity];
+            }
+            
+            var distances = spline.distances;
+            if (calculateDistances) {
+                if (distances == null || distances.Length < capacity) {
+                    distances = new float[capacity];
+                }
+            } else {
+                distances = null;
+            }
+            
+            // a spline with no segments is just its origin point
             if (segments.Length == 0 || steps <= 0) {
-                return new Spline(new[] { start }, distances: new[] { 0f }, 0f);
+                spline.positions[0] = start;
+                if (calculateDistances) {
+                    spline.distances[0] = 0f;
+                }
+
+                spline = new Spline(positions, distances, capacity, 0f);
+                return;
             }
 
-            var capacity = 1 + segments.Length * steps;
-
-            var positions = new Vector3[capacity];
-            var distances = calculateDistances ? new float[capacity] : null;
-            
             positions[0] = start;
 
             var length = 0f;
 
             var posIndex = 1;
-            
+
             for (var s = 0; s < segments.Length; s += 1) {
                 var segment = segments[s];
                 for (var step = 1; step <= steps; step += 1) {
@@ -103,7 +155,7 @@ namespace SpaceTrader.Util {
                         // the stored distance used for interpolation is cumulative
                         distances[posIndex] = distances[posIndex - 1] + distanceBetween;
                     }
-                    
+
                     posIndex += 1;
                 }
 
@@ -125,7 +177,7 @@ namespace SpaceTrader.Util {
                 length = Vector3.Distance(positions[0], positions[^1]);
             }
 
-            return new Spline(positions, distances, length);
+            spline = new Spline(positions, distances, capacity, length);
         }
 
         public static Vector3 CubicBezier(
