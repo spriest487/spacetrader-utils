@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
+﻿// ReSharper disable NotAccessedField.Local
+
+using System;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace SpaceTrader.Util {
     public class SplineVisualizer : MonoBehaviour {
@@ -67,16 +70,16 @@ namespace SpaceTrader.Util {
             var index = 1;
             Gizmos.color = Color.cyan;
 
-            if (spline.Positions.Count > 0) {
+            if (spline.Positions.Length > 0) {
                 Gizmos.DrawLine(localOrigin, spline.Positions[0]);
 
                 foreach (var point in spline.Positions) {
-                    if (index < spline.Positions.Count - 2) {
+                    if (index < spline.Positions.Length - 2) {
                         Gizmos.DrawLine(point, spline.Positions[index + 1]);
                     }
 
                     Gizmos.DrawWireSphere(point, 0.25f * this.gizmoSize);
-                    Handles.Label(point, $"{index}/{spline.Positions.Count}");
+                    Handles.Label(point, $"{index}/{spline.Positions.Length}");
 
                     ++index;
                 }
