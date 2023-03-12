@@ -24,6 +24,15 @@ namespace SpaceTrader.Util {
     public class TransitionRuleStateMachine<T> : StateMachine<T>
         where T : IStateMachineState<T> {
         private delegate void TransitionRuleDelegate(T fromState, ref RuleTransition<T> transition);
+        
+        private const BindingFlags ConditionMemberBindingFlags = BindingFlags.Public 
+            | BindingFlags.NonPublic 
+            | BindingFlags.Instance;
+
+        private const BindingFlags RuleMethodBindingFlags = BindingFlags.Public
+            | BindingFlags.NonPublic
+            | BindingFlags.Instance
+            | BindingFlags.InvokeMethod;
 
         private readonly Dictionary<Type, List<TransitionRuleDelegate>> transitionRules;
 
@@ -47,28 +56,70 @@ namespace SpaceTrader.Util {
             this.ProcessTransitionRules(nextState);
         }
 
+        private void ProcessTransitionRules(T state) {
+            var stateType = state.GetType();
+            if (this.transitionRules.TryGetValue(stateType, out var rulesList)) {
+                return;
+            }
+
+            rulesList = new List<TransitionRuleDelegate>();
+
+            var ruleMethods = stateType.GetMethods(RuleMethodBindingFlags);
+
+            foreach (var method in ruleMethods) {
+                var ruleDelegate = this.ProcessTransitionRule(stateType, method);
+                if (ruleDelegate != null) {
+                    rulesList.Add(ruleDelegate);
+                }
+            }
+
+            this.transitionRules.Add(stateType, rulesList);
+        }
+
         [CanBeNull]
-        private TransitionRuleDelegate ProcessTransitionRules(Type stateType, MethodInfo method) {
+        private TransitionRuleDelegate ProcessTransitionRule(Type stateType, MethodInfo method) {
             if (method.GetCustomAttribute<TransitionRuleAttribute>() is not { } ruleAttribute) {
                 return null;
             }
 
-            var conditionProperty = (PropertyInfo)null;
+            var conditionMember = (MemberInfo)null;
+            var conditionValueType = (Type)null;
             var conditionDefaultVal = (object)null;
+
             if (ruleAttribute.Condition != null) {
-                conditionProperty = stateType.GetProperty(
-                    ruleAttribute.Condition,
-                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
-                );
-                if (conditionProperty == null) {
+                var conditionProperty = stateType.GetProperty(ruleAttribute.Condition, ConditionMemberBindingFlags);
+                if (conditionProperty != null) {
+                    conditionMember = conditionProperty;
+                    conditionValueType = conditionProperty.PropertyType;
+                } else {
+                    var conditionField = stateType.GetField(ruleAttribute.Condition, ConditionMemberBindingFlags);
+                    if (conditionField != null) {
+                        conditionMember = conditionField;
+                        conditionValueType = conditionField.FieldType;
+                    }
+                }
+                
+                if (conditionMember == null) {
                     Debug.LogErrorFormat(
-                        "could not find condition property {0} of {1} for transition rule {2}",
+                        "could not find condition member {0} of {1} for transition rule {2}",
                         ruleAttribute.Condition,
                         stateType,
                         method.Name
                     );
-                } else if (conditionProperty.PropertyType.IsValueType) {
-                    conditionDefaultVal = Activator.CreateInstance(conditionProperty.PropertyType);
+                } else if (conditionValueType.IsValueType) {
+                    try {
+                        conditionDefaultVal = Activator.CreateInstance(conditionValueType);
+                    } catch (Exception e) {
+                        Debug.LogErrorFormat(
+                            "failed to create default value for condition member {0} of {1} for transition rule {2}: {3}",
+                            ruleAttribute.Condition,
+                            stateType,
+                            method.Name, 
+                            e
+                        );
+                        conditionMember = null;
+                        conditionValueType = null;
+                    }
                 }
             }
 
@@ -91,15 +142,27 @@ namespace SpaceTrader.Util {
                 }
             }
 
+            bool IsConditionActive(T state) {
+                switch (conditionMember) {
+                    case PropertyInfo conditionProperty: {
+                        var conditionValue = conditionProperty.GetValue(state);
+                        return !Equals(conditionDefaultVal, conditionValue);
+                    }
+
+                    case FieldInfo conditionField: {
+                        var conditionValue = conditionField.GetValue(state);
+                        return !Equals(conditionDefaultVal, conditionValue);
+                    }
+                }
+
+                return true;
+            }
+
             void ExecuteTransitionRuleMethod(T fromState, ref RuleTransition<T> ruleTransition) {
                 using var profilerSegment = new ProfilerSegment("TransitionRuleStateMachine - Execute Transition Rule");
-                
-                if (conditionProperty != null) {
-                    var conditionValue = conditionProperty.GetValue(fromState);
 
-                    if (Equals(conditionDefaultVal, conditionValue)) {
-                        return;
-                    }
+                if (!IsConditionActive(fromState)) {
+                    return;
                 }
 
                 if (method.Invoke(fromState, null) is T toState) {
@@ -117,12 +180,8 @@ namespace SpaceTrader.Util {
             void ExecutePopTransitionRuleMethod(T fromState, ref RuleTransition<T> ruleTransition) {
                 using var profilerSegment = new ProfilerSegment("TransitionRuleStateMachine - Execute Transition Rule");
 
-                if (conditionProperty != null) {
-                    var conditionValue = conditionProperty.GetValue(fromState);
-
-                    if (Equals(conditionDefaultVal, conditionValue)) {
-                        return;
-                    }
+                if (!IsConditionActive(fromState)) {
+                    return;
                 }
 
                 bool result;
@@ -143,31 +202,6 @@ namespace SpaceTrader.Util {
                     ruleTransition.ToState = default;
                 }
             }
-        }
-
-        private void ProcessTransitionRules(T state) {
-            var stateType = state.GetType();
-            if (this.transitionRules.TryGetValue(stateType, out var rulesList)) {
-                return;
-            }
-
-            rulesList = new List<TransitionRuleDelegate>();
-
-            const BindingFlags ruleMethodBindingFlags = BindingFlags.Instance
-                | BindingFlags.InvokeMethod
-                | BindingFlags.Public
-                | BindingFlags.NonPublic;
-
-            var ruleMethods = stateType.GetMethods(ruleMethodBindingFlags);
-
-            foreach (var method in ruleMethods) {
-                var ruleDelegate = this.ProcessTransitionRules(stateType, method);
-                if (ruleDelegate != null) {
-                    rulesList.Add(ruleDelegate);
-                }
-            }
-
-            this.transitionRules.Add(stateType, rulesList);
         }
 
         public void Update() {
@@ -196,7 +230,7 @@ namespace SpaceTrader.Util {
 
         private bool DoTransition(ref RuleTransition<T> ruleTransition) {
             switch (ruleTransition.TransitionKind) {
-                case RuleTransitionKind.Pop: {
+                case RuleTransitionKind.Pop when this.Count > 0: {
                     this.Pop();
                     return true;
                 }
