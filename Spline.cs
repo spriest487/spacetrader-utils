@@ -56,11 +56,11 @@ namespace SpaceTrader.Util {
             var index = Mathf.FloorToInt(nearestIndex);
 
             if (this.distances != null) {
-                while (index > 1 && this.distances[index] >= time) {
+                while (index > 0 && this.distances[index] >= time) {
                     index -= 1;
                 }
 
-                while (index < this.distances.Length - 1 && this.distances[index + 1] < time) {
+                while (index < this.count - 1 && this.distances[index + 1] < time) {
                     index += 1;
                 }
             }
@@ -131,7 +131,7 @@ namespace SpaceTrader.Util {
                     spline.distances[0] = 0f;
                 }
 
-                spline = new Spline(positions, distances, capacity, 0f);
+                spline = new Spline(positions, distances, 1, 0f);
                 return;
             }
 
@@ -141,8 +141,7 @@ namespace SpaceTrader.Util {
 
             var posIndex = 1;
 
-            for (var s = 0; s < segments.Length; s += 1) {
-                var segment = segments[s];
+            foreach (var segment in segments) {
                 for (var step = 1; step <= steps; step += 1) {
                     var time = step / (float)steps;
                     var pos = CubicBezier(time, start, segment.StartTangent, segment.EndTangent, segment.End);
@@ -166,15 +165,15 @@ namespace SpaceTrader.Util {
             if (distances != null && length > 0f) {
                 // make sure these values are exact:
                 distances[0] = 0f;
-                if (distances.Length > 1) {
-                    distances[^1] = 1f;
+                if (capacity > 1) {
+                    distances[capacity - 1] = 1f;
                 }
 
-                for (var i = 1; i < distances.Length - 1; i += 1) {
+                for (var i = 1; i < capacity - 1; i += 1) {
                     distances[i] /= length;
                 }
             } else {
-                length = Vector3.Distance(positions[0], positions[^1]);
+                length = Vector3.Distance(positions[0], positions[capacity - 1]);
             }
 
             spline = new Spline(positions, distances, capacity, length);
