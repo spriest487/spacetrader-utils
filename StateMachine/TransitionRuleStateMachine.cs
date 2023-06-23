@@ -58,22 +58,34 @@ namespace SpaceTrader.Util {
 
         private void ProcessTransitionRules(T state) {
             var stateType = state.GetType();
-            if (this.transitionRules.TryGetValue(stateType, out var rulesList)) {
-                return;
+
+            this.FindRulesForType(stateType);
+        }
+
+        private List<TransitionRuleDelegate> FindRulesForType(Type type) {
+            if (this.transitionRules.TryGetValue(type, out var rules)) {
+                return rules;
             }
 
-            rulesList = new List<TransitionRuleDelegate>();
+            rules = new List<TransitionRuleDelegate>();
 
-            var ruleMethods = stateType.GetMethods(RuleMethodBindingFlags);
+            var baseType = type.BaseType;
+            if (baseType != null) {
+                rules.AddRange(this.FindRulesForType(baseType));
+            }
+                
+            var ruleMethods = type.GetMethods(RuleMethodBindingFlags);
 
             foreach (var method in ruleMethods) {
-                var ruleDelegate = this.ProcessTransitionRule(stateType, method);
+                var ruleDelegate = this.ProcessTransitionRule(type, method);
                 if (ruleDelegate != null) {
-                    rulesList.Add(ruleDelegate);
+                    rules.Add(ruleDelegate);
                 }
             }
 
-            this.transitionRules.Add(stateType, rulesList);
+            this.transitionRules.Add(type, rules);
+
+            return rules;
         }
 
         [CanBeNull]
