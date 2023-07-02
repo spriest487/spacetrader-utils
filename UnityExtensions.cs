@@ -217,8 +217,11 @@ namespace SpaceTrader.Util {
             return null;
         }
 
+#if UNITY_COLLECTIONS 
         public static unsafe void SetPositions(this LineRenderer lineRenderer, ReadOnlySpan<Vector3> positions) {
+#if UNITY_COLLECTIONS && ENABLE_UNITY_COLLECTIONS_CHECKS
             var safety = AtomicSafetyHandle.Create();
+#endif
             try {
                 fixed (Vector3* positionsPtr = positions) {
                     var slice = NativeSliceUnsafeUtility.ConvertExistingDataToNativeSlice<Vector3>(
@@ -226,13 +229,19 @@ namespace SpaceTrader.Util {
                         UnsafeUtility.SizeOf<Vector3>(),
                         positions.Length
                     );
+                    
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                     NativeSliceUnsafeUtility.SetAtomicSafetyHandle(ref slice, safety);
+#endif
 
                     lineRenderer.SetPositions(slice);
                 }
             } finally {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.Release(safety);
+#endif
             }
         }
+#endif
     }
 }
