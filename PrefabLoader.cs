@@ -31,7 +31,18 @@ namespace SpaceTrader.Util {
             while (!instantiateOp.IsDone) {
                 yield return null;
             }
-            
+
+            if (instantiateOp.OperationException != null || !instantiateOp.Result) {
+                Debug.LogErrorFormat(this, "prefab load failed: {0}", instantiateOp.OperationException);
+            } else {
+                var instance = instantiateOp.Result;
+
+                if (!string.IsNullOrEmpty(this.singletonTag) && !instance.CompareTag(this.singletonTag)) {
+                    Debug.LogErrorFormat(this, "loaded prefab asset is missing the expected singleton tag '{0}'", this.singletonTag);
+                    instance.tag = this.singletonTag;
+                }
+            }
+
             Destroy(this.gameObject);
         }
     }
