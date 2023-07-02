@@ -8,12 +8,48 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace SpaceTrader.Util {
+    public readonly struct PoolInstantiateEvent<TComponent>  {
+        public int Index { get;  }
+        public TComponent Prefab { get; }
+        public Transform Parent { get; }
+
+        public PoolInstantiateEvent(int index, TComponent prefab, Transform parent) {
+            this.Index = index;
+            this.Prefab = prefab;
+            this.Parent = parent;
+        }
+    }
+
+    public readonly struct PoolRefreshEvent<TData, TComponent> {
+        public int Index { get;  }
+        public TData Data { get; }
+        public TComponent Instance { get; }
+
+        public PoolRefreshEvent(int index, TData data, TComponent instance) {
+            this.Index = index;
+            this.Data = data;
+            this.Instance = instance;
+        }
+    }
+
+    public readonly struct PoolInitializeEvent<TComponent> {
+        public int Index { get; }
+        public TComponent Instance { get; }
+
+        public PoolInitializeEvent(int index, TComponent instance) {
+            this.Index = index;
+            this.Instance = instance;
+        }
+    }
+    
     [Serializable]
     public class PooledList<TData, TComponent> : IReadOnlyList<TComponent>
         where TComponent : Component {
-        public delegate bool FilterDelegate(TData data);
-        public delegate TComponent InstantiateDelegate(TComponent prefab, Transform parent);
-        public delegate void InitializeDelegate(TData data, TComponent item);
+        public delegate bool FilterDelegate(in TData data);
+
+        public delegate TComponent InstantiateDelegate(PoolInstantiateEvent<TComponent> instantiateEvent);
+        public delegate void RefreshDelegate(PoolRefreshEvent<TData, TComponent> refreshEvent);
+        public delegate void InitializeDelegate(PoolInitializeEvent<TComponent> initEvent);
 
         [SerializeField, HideInInspector]
         private List<TComponent> pool = new List<TComponent>();
@@ -29,8 +65,12 @@ namespace SpaceTrader.Util {
 
         public int Count => this.pool.Count;
 
-        public IEnumerator<TComponent> GetEnumerator() {
+        public List<TComponent>.Enumerator GetEnumerator() {
             return this.pool.GetEnumerator();
+        }
+
+        IEnumerator<TComponent> IEnumerable<TComponent>.GetEnumerator() {
+            return this.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
@@ -71,15 +111,17 @@ namespace SpaceTrader.Util {
         /// Add all children that exist in the hierarchy under the Root and that are not already members of the
         /// pool to the pool as disabled instances
         /// </summary>
-        public void AddExistingChildren(Action<TComponent> initializeItem = null) {
+        public void AddExistingChildren(InitializeDelegate initExisting = null) {
             foreach (var instance in this.root.GetComponentsInChildren<TComponent>(true)) {
                 if (this.pool.Contains(instance)) {
                     continue;
                 }
 
-                initializeItem?.Invoke(instance);
-
+                var index = this.pool.Count;
                 this.pool.Add(instance);
+                
+                initExisting?.Invoke(new PoolInitializeEvent<TComponent>(index, instance));
+
                 instance.gameObject.SetActive(false);
             }
         }
@@ -87,20 +129,20 @@ namespace SpaceTrader.Util {
         public void Refresh(
             IEnumerable<TData> source,
             FilterDelegate filter = null,
-            InitializeDelegate initializer = null,
+            RefreshDelegate refresh = null,
             InstantiateDelegate instantiator = null
         ) {
             var index = 0;
 
             if (source is IReadOnlyList<TData> sourceList) {
                 for (var i = 0; i < sourceList.Count; i += 1) {
-                    if (this.PopulateItem(sourceList[i], index, filter, initializer, instantiator)) {
+                    if (this.PopulateItem(sourceList[i], index, filter, refresh, instantiator)) {
                         index += 1;
                     }
                 }
             } else {
                 foreach (var item in source) {
-                    if (this.PopulateItem(item, index, filter, initializer, instantiator)) {
+                    if (this.PopulateItem(item, index, filter, refresh, instantiator)) {
                         index += 1;
                     }
                 }
@@ -118,13 +160,13 @@ namespace SpaceTrader.Util {
             this.pool.Sort(0, activeCount, comparer);
         }
 
-        private bool PopulateItem(TData item,
+        private bool PopulateItem(in TData item,
             int index,
             FilterDelegate filter,
-            InitializeDelegate initializer,
+            RefreshDelegate initializer,
             InstantiateDelegate instantiator
         ) {
-            if (filter != null && !filter(item)) {
+            if (filter != null && !filter(in item)) {
                 return false;
             }
 
@@ -133,13 +175,13 @@ namespace SpaceTrader.Util {
                 component = this.pool[index];
             } else {
                 component = instantiator != null
-                    ? instantiator(this.prefab, this.root)
+                    ? instantiator(new PoolInstantiateEvent<TComponent>(index, this.prefab, this.root))
                     : Object.Instantiate(this.prefab, this.root);
                 this.pool.Add(component);
             }
 
             component.gameObject.SetActive(true);
-            initializer?.Invoke(item, component);
+            initializer?.Invoke(new PoolRefreshEvent<TData, TComponent>(index, item, component));
 
             return true;
         }
