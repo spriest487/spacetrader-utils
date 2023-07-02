@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace SpaceTrader.Util {
     public static class EnumerableExtensions {
-        public static IEnumerable<(T Value, int Index)> Indexed<T>(this IEnumerable<T> source) {
+        public static IEnumerable<(T Value, int Index)> Indexed<T>([NotNull] this IEnumerable<T> source) {
             var index = 0;
             foreach (var item in source) {
                 yield return (item, index++);
@@ -12,29 +13,29 @@ namespace SpaceTrader.Util {
         }
 
         public static T MinBy<T, TKey>(
-            this IEnumerable<T> source,
-            Func<T, TKey> keySelector,
-            Comparison<TKey> comparison = null
+            [NotNull] this IEnumerable<T> source,
+            [NotNull] Func<T, TKey> keySelector,
+            [CanBeNull] Comparison<TKey> comparison = null
         ) {
             return source.ByComparison(keySelector, delta => delta < 0, comparison);
         }
 
         public static T MaxBy<T, TKey>(
-            this IEnumerable<T> source,
-            Func<T, TKey> keySelector,
-            Comparison<TKey> comparison = null
+            [NotNull] this IEnumerable<T> source,
+            [NotNull] Func<T, TKey> keySelector,
+            [CanBeNull] Comparison<TKey> comparison = null
         ) {
-            return source.ByComparison(keySelector, delta => delta > 0, comparison);
+            return source.ByComparison(keySelector, static delta => delta > 0, comparison);
         }
 
         private static T ByComparison<T, TKey>(
-            this IEnumerable<T> source,
-            Func<T, TKey> keySelector,
-            Func<int, bool> resultSelector,
-            Comparison<TKey> comparison
+            [NotNull] this IEnumerable<T> source,
+            [NotNull] Func<T, TKey> keySelector,
+            [NotNull] Predicate<int> resultSelector,
+            [CanBeNull] Comparison<TKey> comparison
         ) {
-            comparison = comparison ?? Comparer<TKey>.Default.Compare;
-            var items = source.GetEnumerator();
+            comparison ??= Comparer<TKey>.Default.Compare;
+            using var items = source.GetEnumerator();
 
             if (items.MoveNext()) {
                 var result = items.Current;
@@ -57,8 +58,8 @@ namespace SpaceTrader.Util {
         }
 
         public static int FindIndex<T>(
-            this IReadOnlyList<T> list,
-            Func<T, bool> predicate
+            [NotNull] this IReadOnlyList<T> list,
+            [NotNull] Predicate<T> predicate
         ) {
             foreach (var i in Enumerable.Range(0, list.Count)) {
                 if (predicate(list[i])) {
@@ -70,15 +71,17 @@ namespace SpaceTrader.Util {
         }
 
         public static int IndexOf<T>(
-            this IReadOnlyList<T> list,
-            T item
+            [NotNull] this IReadOnlyList<T> list,
+            [CanBeNull] T item,
+            [CanBeNull] EqualityComparer<T> comparer = null
         ) {
-            return list.FindIndex(each => item.Equals(each));
+            comparer ??= EqualityComparer<T>.Default;
+            return list.FindIndex(each => comparer.Equals(item, each));
         }
 
         public static void ForEach<T>(
             this IReadOnlyList<T> list,
-            Action<T> action
+            [NotNull] Action<T> action
         ) {
             for (var i = 0; i < list.Count; ++i) {
                 action(list[i]);
@@ -90,24 +93,28 @@ namespace SpaceTrader.Util {
             v = kvp.Value;
         }
 
-        public static IEnumerable<K> Keys<K, V>(this IEnumerable<KeyValuePair<K, V>> source) {
+        public static IEnumerable<K> Keys<K, V>([NotNull] this IEnumerable<KeyValuePair<K, V>> source) {
             foreach (var item in source) {
                 yield return item.Key;
             }
         }
 
-        public static IEnumerable<V> Values<K, V>(this IEnumerable<KeyValuePair<K, V>> source) {
+        public static IEnumerable<V> Values<K, V>([NotNull] this IEnumerable<KeyValuePair<K, V>> source) {
             foreach (var item in source) {
                 yield return item.Value;
             }
         }
 
-        public static void Deconstruct<K, V>(this IGrouping<K, V> group, out K k, out IEnumerable<V> v) {
+        public static void Deconstruct<K, V>(
+            [NotNull] this IGrouping<K, V> group,
+            out K k,
+            [NotNull] out IEnumerable<V> v
+        ) {
             k = group.Key;
             v = group;
         }
 
-        public static IEnumerable<(T, T)> Windows2<T>(this IEnumerable<T> items) {
+        public static IEnumerable<(T, T)> Windows2<T>([NotNull] this IEnumerable<T> items) {
             using var enumerator = items.GetEnumerator();
             if (!enumerator.MoveNext()) {
                 yield break;
@@ -120,18 +127,20 @@ namespace SpaceTrader.Util {
                 prev = enumerator.Current;
             }
         }
-        
-        public static IEnumerable<(T, T, T)> Windows3<T>(this IEnumerable<T> items) {
+
+        public static IEnumerable<(T, T, T)> Windows3<T>([NotNull] this IEnumerable<T> items) {
             using var enumerator = items.GetEnumerator();
-            
+
             if (!enumerator.MoveNext()) {
                 yield break;
             }
+
             var prev0 = enumerator.Current;
-            
+
             if (!enumerator.MoveNext()) {
                 yield break;
             }
+
             var prev1 = enumerator.Current;
 
             while (enumerator.MoveNext()) {
