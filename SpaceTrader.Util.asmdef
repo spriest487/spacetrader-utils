@@ -4,7 +4,9 @@
     "references": [
         "Unity.Addressables",
         "Unity.ResourceManager",
-        "Unity.Multiplayer.MLAPI.Runtime"
+        "Unity.Multiplayer.MLAPI.Runtime",
+        "Unity.Collections",
+        "Unity.Burst"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -23,6 +25,11 @@
             "name": "com.unity.multiplayer.mlapi",
             "expression": "",
             "define": "UNITY_MLAPI"
+        },
+        {
+            "name": "com.unity.collections",
+            "expression": "",
+            "define": "UNITY_COLLECTIONS"
         }
     ],
     "noEngineReferences": false
