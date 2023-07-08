@@ -50,14 +50,14 @@ namespace SpaceTrader.Util.AddressableUtils {
         [ItemCanBeNull]
         private async Task<TAsset> LoadAsync(TRef assetRef) {
             var handle = Addressables.LoadAssetAsync<TAsset>(assetRef);
-            
+            this.handleCache[assetRef.RuntimeKey] = handle;
+
             await handle.Task;
             
             if (handle.OperationException != null) {
                 Debug.LogException(handle.OperationException);
             }
 
-            this.handleCache[assetRef.RuntimeKey] = handle;
 
             Debug.LogFormat("cached asset: {0}", handle.Result switch {
                 null => "null",
