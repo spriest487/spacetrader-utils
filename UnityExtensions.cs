@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using JetBrains.Annotations;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
@@ -217,7 +219,21 @@ namespace SpaceTrader.Util {
             return null;
         }
 
-#if UNITY_COLLECTIONS 
+        public static int IndexOf<T>(
+            this System.ReadOnlySpan<T> span,
+            T value,
+            [NotNull] EqualityComparer<T> comparer
+        ) {
+            for (var i = 0; i < span.Length; i += 1) {
+                if (comparer.Equals(value, span[i])) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+#if UNITY_COLLECTIONS
         public static unsafe void SetPositions(this LineRenderer lineRenderer, ReadOnlySpan<Vector3> positions) {
 #if UNITY_COLLECTIONS && ENABLE_UNITY_COLLECTIONS_CHECKS
             var safety = AtomicSafetyHandle.Create();
@@ -229,7 +245,7 @@ namespace SpaceTrader.Util {
                         UnsafeUtility.SizeOf<Vector3>(),
                         positions.Length
                     );
-                    
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                     NativeSliceUnsafeUtility.SetAtomicSafetyHandle(ref slice, safety);
 #endif
