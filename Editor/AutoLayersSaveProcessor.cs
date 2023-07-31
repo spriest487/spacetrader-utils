@@ -44,7 +44,7 @@ namespace SpaceTrader.Util.EditorUtil {
         }
 
         public static void GenerateScript() {
-            var saveFile = new FileInfo(Path.Combine(Application.dataPath, AutoLayersPrefs.OutputPath));
+            var saveFile = new FileInfo(Path.Combine(Application.dataPath, "..", AutoLayersPrefs.OutputPath));
             saveFile.Directory?.Create();
 
             var layers = ValidLayers().ToList();
@@ -99,7 +99,7 @@ namespace SpaceTrader.Util.EditorUtil {
                 }
             }
 
-            AssetDatabase.Refresh();
+            AssetDatabase.ImportAsset(AutoLayersPrefs.OutputPath);
         }
 
         private static string[] OnWillSaveAssets(string[] paths) {
