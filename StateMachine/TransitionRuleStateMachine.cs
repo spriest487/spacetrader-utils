@@ -15,6 +15,8 @@ namespace SpaceTrader.Util {
 
     internal struct RuleTransition<T>
         where T : IStateMachineState<T> {
+        public string Name { get; set; }
+        
         public T ToState { get; set; }
         public RuleTransitionKind TransitionKind { get; set; }
     }
@@ -184,6 +186,7 @@ namespace SpaceTrader.Util {
                         Debug.LogException(e);
                     }
 
+                    ruleTransition.Name = method.Name;
                     ruleTransition.TransitionKind = ruleAttribute.TransitionKind;
                     ruleTransition.ToState = toState;
                 }
@@ -197,10 +200,17 @@ namespace SpaceTrader.Util {
                 }
 
                 bool result;
-                if (method.ReturnType == typeof(void)) {
-                    result = true;
-                } else {
-                    result = (bool)method.Invoke(fromState, null);
+                try {
+                    if (method.ReturnType == typeof(void)) {
+                        method.Invoke(fromState, null);
+                        result = true;
+                    } else {
+                        result = (bool)method.Invoke(fromState, null);
+                    }
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                    
+                    result = false;
                 }
 
                 if (result) {
@@ -210,6 +220,7 @@ namespace SpaceTrader.Util {
                         Debug.LogException(e);
                     }
 
+                    ruleTransition.Name = method.Name;
                     ruleTransition.TransitionKind = RuleTransitionKind.Pop;
                     ruleTransition.ToState = default;
                 }
@@ -220,7 +231,7 @@ namespace SpaceTrader.Util {
             bool anyTransition;
             do {
                 anyTransition = false;
-                if (!(this.Current is { } currentState)) {
+                if (this.Current is not { } currentState) {
                     break;
                 }
 
@@ -228,7 +239,7 @@ namespace SpaceTrader.Util {
                     continue;
                 }
 
-                var transition = new RuleTransition<T>();
+                var transition = default(RuleTransition<T>);
                 foreach (var rule in rulesList) {
                     rule(currentState, ref transition);
 
