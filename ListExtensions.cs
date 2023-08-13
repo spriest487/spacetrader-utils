@@ -63,9 +63,42 @@ namespace SpaceTrader.Util {
             while (n > 1) {
                 n--;
                 var k = UnityRandom.Range(0, n + 1);
-                var value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                (list[k], list[n]) = (list[n], list[k]);
+            }
+        }
+
+        public static bool TopologicalSort<T>(
+            this IEnumerable<T> nodes,
+            Func<T, IEnumerable<T>> neighborFunc,
+            List<T> results
+        ) {
+            var states = new Dictionary<T, bool>();
+
+            foreach (var node in nodes) {
+                if (!Visit(node)) {
+                    results.Clear();
+                    return false;
+                }
+            }
+
+            return true;
+
+            bool Visit(T node) {
+                if (states.TryGetValue(node, out var state)) {
+                    return state;
+                }
+
+                states[node] = false;
+                foreach (var neighbor in neighborFunc(node)) {
+                    if (!Visit(neighbor)) {
+                        return false;
+                    }
+                }
+
+                states[node] = true;
+
+                results.Add(node);
+                return true;
             }
         }
     }
