@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
@@ -8,39 +9,55 @@ namespace SpaceTrader.Util {
             Quaternion rot,
             Vector3? scale = default
         ) {
-            var xform = Matrix4x4.TRS(pos, rot, scale ?? Vector3.one);
-            DrawWireMeshGizmos(root, xform);
+            var prevMatrix = Gizmos.matrix;
+
+            Gizmos.matrix = Matrix4x4.TRS(pos, rot, scale ?? Vector3.one); 
+            DrawWireMeshGizmos(root);
+            Gizmos.matrix = prevMatrix;
         }
 
-        public static void DrawWireMeshGizmos(
-            this GameObject root,
-            Matrix4x4 xform
-        ) {
-            var origin = xform.MultiplyPoint(Vector3.zero);
+        public static void DrawWireMeshGizmos(this GameObject root) {
+            DrawHierarchy(root, static gameObj => {
+                if (gameObj.TryGetComponent(out MeshFilter filter) && filter.sharedMesh) {
+                    var subMeshCount = filter.sharedMesh.subMeshCount;
 
-            if (root.TryGetComponent(out MeshFilter filter) && filter.sharedMesh) {
-                var prevGizmoMatrix = Gizmos.matrix;
-                Gizmos.matrix = xform;
-
-                var subMeshCount = filter.sharedMesh.subMeshCount;
-
-                for (var sub = 0; sub < subMeshCount; ++sub) {
-                    Gizmos.DrawWireMesh(filter.sharedMesh, sub);
+                    for (var sub = 0; sub < subMeshCount; ++sub) {
+                        Gizmos.DrawWireMesh(filter.sharedMesh, sub);
+                    }
                 }
 
-                Gizmos.matrix = prevGizmoMatrix;
-            }
+                if (gameObj.TryGetComponent(out SpriteRenderer _)) {
+                    var origin = Gizmos.matrix.MultiplyPoint(Vector3.zero);
+                    Gizmos.DrawWireCube(origin, Gizmos.matrix.lossyScale);
+                }
+            });
+        }
 
-            if (root.TryGetComponent(out SpriteRenderer _)) {
-                Gizmos.DrawWireCube(origin, xform.lossyScale);
-            }
+        public static void DrawMeshGizmos(this GameObject root) {
+            DrawHierarchy(root, static gameObj => {
+                if (!gameObj.TryGetComponent(out MeshFilter filter) || !filter.sharedMesh) {
+                    return;
+                }
+
+                for (var sub = 0; sub < filter.sharedMesh.subMeshCount; sub += 1) {
+                    Gizmos.DrawMesh(filter.sharedMesh, sub);
+                }
+            });
+        }
+
+        private static void DrawHierarchy(GameObject root, Action<GameObject> drawAction) {
+            var matrix = Gizmos.matrix;
+
+            drawAction(root);
 
             for (var i = 0; i < root.transform.childCount; i += 1) {
                 var child = root.transform.GetChild(i);
-                var childXform = xform * Matrix4x4.TRS(child.localPosition, child.localRotation, child.localScale);
+                Gizmos.matrix = matrix * Matrix4x4.TRS(child.localPosition, child.localRotation, child.localScale);
 
-                DrawWireMeshGizmos(child.gameObject, childXform);
+                DrawHierarchy(child.gameObject, drawAction);
             }
+
+            Gizmos.matrix = matrix;
         }
     }
 }
