@@ -88,6 +88,35 @@ namespace SpaceTrader.Util {
             }
         }
 
+        public static int IndexOf<T>(
+            in this ReadOnlySpan<T> source,
+            T item,
+            EqualityComparer<T> comparer = null
+        ) {
+            comparer ??= EqualityComparer<T>.Default;
+            
+            for (var i = 0; i < source.Length; i += 1) {
+                if (comparer.Equals(item, source[i])) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        public static int FindIndex<T>(
+            in this ReadOnlySpan<T> source,
+            [NotNull] Predicate<T> predicate
+        ) {
+            for (var i = 0; i < source.Length; i += 1) {
+                if (predicate(source[i])) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         public static void Deconstruct<K, V>(this KeyValuePair<K, V> kvp, out K k, out V v) {
             k = kvp.Key;
             v = kvp.Value;
