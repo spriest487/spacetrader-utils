@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿#if UNITY_ADDRESSABLES
+
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -47,3 +49,5 @@ namespace SpaceTrader.Util {
         }
     }
 }
+
+#endif

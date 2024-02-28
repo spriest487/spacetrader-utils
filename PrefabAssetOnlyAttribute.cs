@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_ADDRESSABLES
+
+using System;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -40,3 +42,5 @@ namespace SpaceTrader.Util {
         }
     }
 }
+
+#endif

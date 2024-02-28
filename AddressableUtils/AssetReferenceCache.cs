@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_ADDRESSABLES
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
@@ -79,3 +81,5 @@ namespace SpaceTrader.Util.AddressableUtils {
         }
     }
 }
+
+#endif

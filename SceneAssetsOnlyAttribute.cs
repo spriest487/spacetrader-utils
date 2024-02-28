@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿#if UNITY_ADDRESSABLES
+
+using UnityEditor;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
@@ -21,3 +23,5 @@ namespace SpaceTrader.Util {
         }
     }
 }
+
+#endif
