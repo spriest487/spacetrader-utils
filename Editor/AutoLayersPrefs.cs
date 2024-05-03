@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SpaceTrader.Util.EditorUtil {
     public static class AutoLayersPrefs {
-        private const string DefaultOutputPath = "AutoLayers/Layers.cs";
+        private const string DefaultOutputPath = "Assets/AutoLayers/Layers.cs";
 
         public static string OutputPath {
             get => GetPrefs()?.OutputPath ?? DefaultOutputPath;
@@ -33,10 +33,10 @@ namespace SpaceTrader.Util.EditorUtil {
             }
         }
 
-        private const string prefsPath = "AutoLayers/AutoLayersSettings.json";
+        private const string PrefsPath = "AutoLayers/AutoLayersSettings.json";
 
         private static AutoLayersPrefsData GetPrefs() {
-            var file = new FileInfo(Path.Combine(Application.dataPath, prefsPath));
+            var file = new FileInfo(Path.Combine(Application.dataPath, PrefsPath));
             if (!file.Exists) {
                 return null;
             }
@@ -50,7 +50,7 @@ namespace SpaceTrader.Util.EditorUtil {
         }
 
         private static void SetPrefs(AutoLayersPrefsData prefs) {
-            var file = new FileInfo(Path.Combine(Application.dataPath, prefsPath));
+            var file = new FileInfo(Path.Combine(Application.dataPath, PrefsPath));
 
             try {
                 file.Directory?.Create();
