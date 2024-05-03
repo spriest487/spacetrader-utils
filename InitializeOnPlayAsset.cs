@@ -25,11 +25,14 @@ namespace SpaceTrader.Util {
 #if UNITY_EDITOR
         private void OnPlayModeStateChanged(PlayModeStateChange stateChange) {
             switch (stateChange) {
+                case PlayModeStateChange.ExitingEditMode: {
+                    this.CheckPreloadedAssetsList();
+                    break;
+                }
+                
                 case PlayModeStateChange.EnteredPlayMode: {
-                    if (this.CheckPreloadedAssetsList()) {
-                        this.initialized = true;
-                        this.Initialize();
-                    }
+                    this.initialized = true;
+                    this.Initialize();
 
                     break;
                 }
@@ -41,19 +44,19 @@ namespace SpaceTrader.Util {
             }
         }
 
-        private bool CheckPreloadedAssetsList() {
+        private void CheckPreloadedAssetsList() {
             if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(this, out var guid, out _)) {
-                return false;
+                return;
             }
 
             var ignoreStateKey = $"{this.GetType().Name} Ignore {guid}";
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
             if (preloadedAssets.Contains(this)) {
-                return true;
+                return;
             }
 
             if (SessionState.GetBool(ignoreStateKey, defaultValue: false)) {
-                return false;
+                return;
             }
 
             const string title = "Missing preloaded asset";
@@ -62,14 +65,22 @@ namespace SpaceTrader.Util {
 
             if (!EditorUtility.DisplayDialog(title, msg, "OK", "Ignore")) {
                 SessionState.SetBool(ignoreStateKey, true);
-                return false;
+                return;
             }
 
             Array.Resize(ref preloadedAssets, preloadedAssets.Length + 1);
             preloadedAssets[^1] = this;
 
             PlayerSettings.SetPreloadedAssets(preloadedAssets);
-            return true;
+
+            var playerSettingsAssets = AssetDatabase.FindAssets($"t:{nameof(PlayerSettings)}");
+            if (playerSettingsAssets.Length > 0) {
+                var playerSettingsPath = AssetDatabase.GUIDToAssetPath(playerSettingsAssets[0]);
+                var playerSettings = AssetDatabase.LoadAssetAtPath<PlayerSettings>(playerSettingsPath);
+                EditorUtility.SetDirty(playerSettings);
+            }
+
+            AssetDatabase.SaveAssets();
         }
 #endif
 
