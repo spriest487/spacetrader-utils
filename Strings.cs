@@ -44,7 +44,18 @@ namespace SpaceTrader.Util {
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator() {
+#if UNITY_EDITOR
+            if (this.map == null) {
+                return this.GetEntryPairs();
+            }
+#endif
             return this.map.GetEnumerator();
+        }
+
+        private IEnumerator<KeyValuePair<string, string>> GetEntryPairs() {
+            foreach (var entry in this.entries) {
+                yield return new KeyValuePair<string, string>(entry.key, entry.value);
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

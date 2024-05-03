@@ -1,5 +1,5 @@
 {
-    "name": "SpaceTraderUtils.Editor",
+    "name": "SpaceTrader.Util.Editor",
     "rootNamespace": "",
     "references": [
         "SpaceTrader.Util"
