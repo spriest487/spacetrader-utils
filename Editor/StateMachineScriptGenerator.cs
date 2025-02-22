@@ -47,8 +47,9 @@ namespace SpaceTrader.Util {
 
         static StateMachineScriptGenerator() {
             stateTypesByName = new Dictionary<string, Type>();
-
-            var candidates = AssemblyUtilities.GetTypes(AssemblyTypeFlags.UserTypes | AssemblyTypeFlags.PluginTypes);
+            var candidates = AssemblyUtilities.GetTypes(AssemblyCategory.Scripts 
+                | AssemblyCategory.ProjectSpecific 
+                | AssemblyCategory.ImportedAssemblies);
 
             foreach (var type in candidates) {
                 if (!IsStateType(type)) {
