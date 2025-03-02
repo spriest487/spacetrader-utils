@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
+using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -271,7 +272,7 @@ namespace SpaceTrader.Util {
                 output.Append($"if (!{equalityComparer}.Equals({condVal}, default)) ");
             }
 
-            output.AppendLine($"{{");
+            output.AppendLine("{");
 
             bool ruleMethodReflected;
             if (rule.TransitionKind == RuleTransitionKind.Pop) {
@@ -280,10 +281,7 @@ namespace SpaceTrader.Util {
                 this.WriteStateToStateRule("s", ruleName, rule, output, out ruleMethodReflected);
             }
 
-            if (rule.Condition != null) {
-                output.AppendLine($"}}");
-            }
-
+            output.AppendLine("}");
             output.AppendLine("}");
 
             this.buildReportRules.Add(
@@ -304,7 +302,7 @@ namespace SpaceTrader.Util {
         ) {
             var baseStateTyName = GetNiceName(this.source.StateType);
 
-            output.AppendLine($"bool popped;");
+            output.AppendLine("bool popped;");
 
             var methodExpr = this.InvokeMemberExpr(
                 stateExpr,
@@ -314,17 +312,17 @@ namespace SpaceTrader.Util {
             );
             if (rule.Method.ReturnType == typeof(void)) {
                 output.AppendLine($"{methodExpr};");
-                output.AppendLine($"popped = true;");
+                output.AppendLine("popped = true;");
             } else {
                 output.AppendLine($"popped = {methodExpr};");
             }
 
-            output.AppendLine($"if (popped) {{");
+            output.AppendLine("if (popped) {");
             output.AppendLine(
                 $"  transition = new RuleTransition<{baseStateTyName}>(\"{ruleName}\", default, RuleTransitionKind.Pop);"
             );
             output.AppendLine("  return true;");
-            output.AppendLine($"}}");
+            output.AppendLine("}");
         }
 
         private void WriteStateToStateRule(
