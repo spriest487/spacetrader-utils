@@ -113,6 +113,8 @@ namespace SpaceTrader.Util {
 
                 if (cached.BuildReports != null) {
                     buildReports = cached.BuildReports.ToDictionary(x => x.AssetPath);
+                } else {
+                    buildReports = new Dictionary<string, StateMachineScriptBuildReport>();
                 }
             } catch (Exception e) {
                 if (e is not FileNotFoundException or DirectoryNotFoundException) {
