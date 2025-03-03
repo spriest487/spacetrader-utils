@@ -5,13 +5,10 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector;
-using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 namespace SpaceTrader.Util {
-    using MethodRuleTransitionInfoTypeErased = MethodRuleTransitionInfo<IStateMachineState<object>>;
-
     public enum StateMachineScriptFallbackMode {
         None,
         Allow,
@@ -26,7 +23,8 @@ namespace SpaceTrader.Util {
     public class StateMachineScriptSettings : ScriptableObject {
         [Serializable]
         private class BuildReportCache {
-            public StateMachineScriptBuildReport[] BuildReports;
+            [field: SerializeField]
+            public StateMachineScriptBuildReport[] BuildReports { get; set; }
         }
 
         private const string BuildReportCacheDir = "Temp/SpaceTrader/StateMachineScriptSettings/";
