@@ -29,7 +29,7 @@ namespace SpaceTrader.Util {
             public string MethodDefinition;
         }
 
-        private static readonly Dictionary<string, Type> stateTypesByName;
+        private static readonly Dictionary<string, ValueDropdownItem<Type>> stateTypesDropdownItems;
 
         private readonly StateMachineScriptSettings source;
 
@@ -47,7 +47,7 @@ namespace SpaceTrader.Util {
         public IEnumerable<StateMachineScriptBuildReportRule> BuildReportRules => this.buildReportRules;
 
         static StateMachineScriptGenerator() {
-            stateTypesByName = new Dictionary<string, Type>();
+            stateTypesDropdownItems = new Dictionary<string, ValueDropdownItem<Type>>();
             var candidates = AssemblyUtilities.GetTypes(AssemblyCategory.Scripts 
                 | AssemblyCategory.ProjectSpecific 
                 | AssemblyCategory.ImportedAssemblies);
@@ -57,7 +57,7 @@ namespace SpaceTrader.Util {
                     continue;
                 }
 
-                stateTypesByName[type.Name] = type;
+                stateTypesDropdownItems.Add(type.Name, new ValueDropdownItem<Type>(type.Name, type));
             }
         }
 
@@ -565,7 +565,8 @@ namespace SpaceTrader.Util {
 
             var rulesCache = (IDictionary)Activator.CreateInstance(cacheTy);
 
-            var allStateTypes = stateTypesByName.Values
+            var allStateTypes = stateTypesDropdownItems.Values
+                .Select(static item => item.Value)
                 .Where(x => this.source.StateType.IsAssignableFrom(x))
                 .ToList();
 
@@ -679,17 +680,23 @@ namespace SpaceTrader.Util {
         }
 
         [UsedImplicitly]
-        private static IEnumerable<KeyValuePair<string, Type>> GetStateTypes() {
-            return stateTypesByName;
+        private static IEnumerable<ValueDropdownItem<Type>> GetStateTypes() {
+            return stateTypesDropdownItems.Values;
         }
 
         public static bool GetStateType(string typeName, out Type type) {
+            type = null;
+
             if (string.IsNullOrWhiteSpace(typeName)) {
-                type = null;
                 return false;
             }
 
-            return stateTypesByName.TryGetValue(typeName, out type);
+            if (!stateTypesDropdownItems.TryGetValue(typeName, out var typeItem)) {
+                return false;
+            }
+
+            type = typeItem.Value;
+            return true;
         }
     }
 }
