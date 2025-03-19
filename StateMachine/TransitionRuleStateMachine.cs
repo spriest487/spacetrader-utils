@@ -269,22 +269,23 @@ namespace SpaceTrader.Util {
                     break;
                 }
 
-                if (this.FindTransition(in currentState, out var transition)) {
+                if (this.TryTransitionFrom(in currentState)) {
                     anyTransition = true;
-                    this.DoTransition(in transition);
                 }
             } while (anyTransition);
         }
 
-        protected virtual bool FindTransition(in T fromState, out RuleTransition<T> transition) {
-            transition = default;
-
+        protected virtual bool TryTransitionFrom(in T fromState) {
             if (!this.transitionRules.TryGetValue(fromState.GetType(), out var rulesList)) {
                 return false;
             }
 
             foreach (var rule in rulesList) {
-                rule.Delegate?.Invoke(this, fromState, out transition);
+                if (rule.Delegate == null) {
+                    continue;
+                }
+
+                rule.Delegate(this, fromState, out var transition);
 
                 if (this.DoTransition(in transition)) {
                     return true;
