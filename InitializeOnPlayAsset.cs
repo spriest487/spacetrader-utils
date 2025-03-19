@@ -30,7 +30,7 @@ namespace SpaceTrader.Util {
                     break;
                 }
                 
-                case PlayModeStateChange.EnteredPlayMode: {
+                case PlayModeStateChange.EnteredPlayMode when !this.initialized: {
                     this.initialized = true;
                     this.Initialize();
 
