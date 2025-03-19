@@ -112,12 +112,8 @@ namespace SpaceTrader.Util {
             };
 
             var tag = Path.GetFileNameWithoutExtension(filePath);
-            if (memberName != null) {
-                if (filePath == null) {
-                    tag = memberName;
-                } else {
-                    tag = $"{tag}.{memberName}";
-                }
+            if (!string.IsNullOrEmpty(memberName)) {
+                tag = tag == null ? memberName : $"{tag}.{memberName}";
             }
 
             Debug.unityLogger.Log(logType, tag, formattedMessage, context);
