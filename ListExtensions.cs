@@ -8,6 +8,22 @@ using UnityRandom = UnityEngine.Random;
 
 namespace SpaceTrader.Util {
     public static class ListUtility {
+        public static bool Contains<T>(
+            in this ReadOnlySpan<T> items, 
+            T item, 
+            [CanBeNull] EqualityComparer<T> comparer = null
+        ) {
+            comparer ??= EqualityComparer<T>.Default;
+
+            for (var i = 0; i < items.Length; i += 1) {
+                if (comparer.Equals(items[i], item)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
         public static T Random<T>([NotNull] this IReadOnlyList<T> source) {
             Debug.Assert(source != null && source.Count > 0);
 
