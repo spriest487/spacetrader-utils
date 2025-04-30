@@ -1,29 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using Random = System.Random;
 using UnityRandom = UnityEngine.Random;
 
 namespace SpaceTrader.Util {
     public static class ListUtility {
-        public static T Random<T>(this IReadOnlyList<T> source) {
+        public static bool Contains<T>(
+            in this ReadOnlySpan<T> items, 
+            T item, 
+            [CanBeNull] EqualityComparer<T> comparer = null
+        ) {
+            comparer ??= EqualityComparer<T>.Default;
+
+            for (var i = 0; i < items.Length; i += 1) {
+                if (comparer.Equals(items[i], item)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
+        public static T Random<T>([NotNull] this IReadOnlyList<T> source) {
             Debug.Assert(source != null && source.Count > 0);
 
             var randomIndex = UnityRandom.Range(0, source.Count);
             return source[randomIndex];
         }
 
-        public static T Random<T>(this IReadOnlyList<T> source, Random random) {
+        public static T Random<T>([NotNull] this IReadOnlyList<T> source, Random random) {
             Debug.Assert(source != null && source.Count > 0);
 
             var randomIndex = random.Next(source.Count);
             return source[randomIndex];
         }
+        
+        public static T Random<T>(in this ReadOnlySpan<T> source) {
+            Debug.Assert(source != null && source.Length > 0);
+
+            var randomIndex = UnityRandom.Range(0, source.Length);
+            return source[randomIndex];
+        }
+        
+        public static T Random<T>(in this ReadOnlySpan<T> source, Random random) {
+            Debug.Assert(source != null && source.Length > 0);
+
+            var randomIndex = random.Next(source.Length);
+            return source[randomIndex];
+        }
 
         public static T RandomWeighted<T>(
-            this IReadOnlyList<T> source,
-            Func<T, int> weightSelector
+            [NotNull] this IReadOnlyList<T> source,
+            [NotNull] Func<T, int> weightSelector
         ) {
             var weightRange = source.Sum(weightSelector);
             var value = UnityRandom.Range(0, weightRange);
@@ -40,9 +71,9 @@ namespace SpaceTrader.Util {
         }
 
         public static T RandomWeighted<T>(
-            this IReadOnlyList<T> source,
-            Random random,
-            Func<T, int> weightSelector
+            [NotNull] this IReadOnlyList<T> source,
+            [NotNull] Random random,
+            [NotNull] Func<T, int> weightSelector
         ) {
             var weightRange = source.Sum(weightSelector);
             var value = random.Next(0, weightRange);
@@ -58,7 +89,7 @@ namespace SpaceTrader.Util {
             return default; // unreachable
         }
 
-        public static void Shuffle<T>(this IList<T> list) {
+        public static void Shuffle<T>([NotNull] this IList<T> list) {
             var n = list.Count;
             while (n > 1) {
                 n--;
@@ -68,9 +99,9 @@ namespace SpaceTrader.Util {
         }
 
         public static bool TopologicalSort<T>(
-            this IEnumerable<T> nodes,
-            Func<T, IEnumerable<T>> neighborFunc,
-            List<T> results
+            [NotNull] this IEnumerable<T> nodes,
+            [NotNull] Func<T, IEnumerable<T>> neighborFunc,
+            [NotNull] List<T> results
         ) {
             var states = new Dictionary<T, bool>();
 
