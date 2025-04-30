@@ -117,6 +117,26 @@ namespace SpaceTrader.Util {
             return -1;
         }
 
+        public static bool SequenceEquals<T>(
+            in this ReadOnlySpan<T> a,
+            IReadOnlyList<T> b,
+            [CanBeNull] EqualityComparer<T> comparer
+        ) {
+            if (a.Length != b.Count) {
+                return false;
+            }
+
+            comparer ??= EqualityComparer<T>.Default;
+
+            for (var i = 0; i < a.Length; i += 1) {
+                if (!comparer.Equals(a[i], b[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public static void Deconstruct<K, V>(this KeyValuePair<K, V> kvp, out K k, out V v) {
             k = kvp.Key;
             v = kvp.Value;
