@@ -118,7 +118,7 @@ namespace SpaceTrader.Util {
             output.AppendLine($"}}");
 
             output.AppendLine(
-                $"protected override bool FindTransition(in {this.baseStateTyName} fromState, out {this.ruleTransitionTyName} transition) {{"
+                $"protected override bool TryTransitionFrom(in {this.baseStateTyName} fromState, out {this.ruleTransitionTyName} transition) {{"
             );
 
             output.AppendLine($"switch (fromState) {{");
@@ -167,13 +167,13 @@ namespace SpaceTrader.Util {
         private void WriteFallbackTransition(StateMachineScriptFallbackMode fallbackMode, StringBuilder output) {
             switch (fallbackMode) {
                 case StateMachineScriptFallbackMode.Allow: {
-                    output.AppendLine($"return base.FindTransition(in fromState, out transition);");
+                    output.AppendLine($"return base.TryTransitionFrom(in fromState, out transition);");
                     break;
                 }
 
                 case StateMachineScriptFallbackMode.Prompt:
                 case StateMachineScriptFallbackMode.Warn: {
-                    output.AppendLine($"var fallbackResult = base.FindTransition(in fromState, out transition);");
+                    output.AppendLine($"var fallbackResult = base.TryTransitionFrom(in fromState, out transition);");
                     output.AppendLine($"if (fallbackResult) {{");
                     output.AppendLine(
                         $"  Debug.LogWarningFormat(\"{this.source.GeneratedClassName}: missing baked transition for {{0}}, falling back to dynamic invocation\", transition.Name);"
