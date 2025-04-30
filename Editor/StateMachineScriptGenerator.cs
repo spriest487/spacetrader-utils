@@ -121,6 +121,9 @@ namespace SpaceTrader.Util {
                 $"protected override bool TryTransitionFrom(in {this.baseStateTyName} fromState, out {this.ruleTransitionTyName} transition) {{"
             );
 
+            output.AppendLine("transition = default;");
+            output.AppendLine("var hasTransition = false;");
+
             output.AppendLine($"switch (fromState) {{");
 
             foreach (var (stateTy, stateRules) in methodRules) {
@@ -139,6 +142,11 @@ namespace SpaceTrader.Util {
                 output.AppendLine($"}}");
             }
 
+            output.AppendLine($"}}");
+            
+            output.AppendLine($"if (hasTransition) {{");
+            output.AppendLine("  this.DoTransition(in transition);");
+            output.AppendLine("  return true;");
             output.AppendLine($"}}");
 
             output.AppendLine($"if (!Application.isEditor) {{");
@@ -231,7 +239,7 @@ namespace SpaceTrader.Util {
             }
             
             output.AppendLine($"if ({ruleMethod.MethodName}(s, out transition)) {{");
-            output.AppendLine($"  return true;");
+            output.AppendLine($"  hasTransition = true;");
             output.AppendLine($"}}");
         }
 

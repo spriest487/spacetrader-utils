@@ -301,7 +301,7 @@ namespace SpaceTrader.Util {
             return false;
         }
 
-        private bool DoTransition(in RuleTransition<T> ruleTransition) {
+        protected bool DoTransition(in RuleTransition<T> ruleTransition) {
             switch (ruleTransition.TransitionKind) {
                 case RuleTransitionKind.Pop when this.Count > 0: {
                     this.Pop();
