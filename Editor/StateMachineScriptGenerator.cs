@@ -134,8 +134,11 @@ namespace SpaceTrader.Util {
                 var stateTyName = GetNiceName(stateTy);
                 output.AppendLine($"case {stateTyName} s: {{");
 
-                foreach (var rule in stateRules) {
-                    this.WriteInvokeRule(in rule, output);
+                for (var i = 0; i < stateRules.Count; i += 1) {
+                    if (i > 0) {
+                        output.Append("else ");
+                    }
+                    this.WriteInvokeRule(stateRules[i], output);
                 }
 
                 output.AppendLine($"  break;");
