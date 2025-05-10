@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SpaceTrader.Util {
     public static class CanvasGroupUtil {
@@ -27,22 +28,26 @@ namespace SpaceTrader.Util {
         }
 
         public static bool IsInteractiveInCanvasGroups(this Behaviour uiBehaviour) {
-            var interactible = true;
+            if (uiBehaviour is Selectable { interactable: false }) {
+                return false;
+            }
+
+            var interactable = true;
             var next = uiBehaviour.transform;
             do {
                 if (next.TryGetComponent(out CanvasGroup canvasGroup)) {
                     if (canvasGroup.ignoreParentGroups) {
-                        interactible = canvasGroup.interactable;
+                        interactable = canvasGroup.interactable;
                         break;
                     }
 
-                    interactible &= canvasGroup.interactable;
+                    interactable &= canvasGroup.interactable;
                 }
 
                 next = next.parent;
             } while (next);
 
-            return interactible;
+            return interactable;
         }
     }
 }
