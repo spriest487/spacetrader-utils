@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Unity.Collections;
 using UnityEngine;
 using Random = System.Random;
 using UnityRandom = UnityEngine.Random;
@@ -92,9 +93,30 @@ namespace SpaceTrader.Util {
         public static void Shuffle<T>([NotNull] this IList<T> list) {
             var n = list.Count;
             while (n > 1) {
-                n--;
+                n -= 1;
+    
                 var k = UnityRandom.Range(0, n + 1);
                 (list[k], list[n]) = (list[n], list[k]);
+            }
+        }
+        
+        public static void Shuffle<T>(this Span<T> range) {
+            var n = range.Length;
+            while (n > 1) {
+                n -=  1;
+    
+                var k = UnityRandom.Range(0, n + 1);
+                (range[k], range[n]) = (range[n], range[k]);
+            }
+        }
+
+        public static unsafe void Sort<T>(
+            this Span<T> range,
+            [CanBeNull] IComparer<T> comp = null
+        ) where T : unmanaged, IComparable<T> {
+            comp ??= new NativeSortExtension.DefaultComparer<T>();
+            fixed (T* rangePtr = range) {
+                NativeSortExtension.Sort(rangePtr, range.Length, comp);
             }
         }
 
