@@ -124,6 +124,7 @@ namespace SpaceTrader.Util {
             output.AppendLine("transition = default;");
             output.AppendLine("var hasTransition = false;");
 
+            output.AppendLine("#pragma warning disable 1522");
             output.AppendLine($"switch (fromState) {{");
 
             foreach (var (stateTy, stateRules) in methodRules) {
@@ -146,6 +147,8 @@ namespace SpaceTrader.Util {
             }
 
             output.AppendLine($"}}");
+            
+            output.AppendLine("#pragma warning restore 1522");
             
             output.AppendLine($"if (hasTransition) {{");
             output.AppendLine("  this.DoTransition(in transition);");
