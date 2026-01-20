@@ -92,6 +92,10 @@ namespace SpaceTrader.Util {
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();
         }
+
+        public Span<T> AsSpan() {
+            return this.array.AsSpan(this.Count);
+        }
     }
 
     public struct ArrayListEnumerator<T> : IEnumerator<T> {
