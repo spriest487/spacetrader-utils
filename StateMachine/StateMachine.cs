@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace SpaceTrader.Util {
@@ -93,6 +94,7 @@ namespace SpaceTrader.Util {
         }
 
         [DebuggerHidden]
+        [HideInCallstack]
         private static void EnterState(T state, T fromState) {
             try {
                 state?.Enter(fromState);
@@ -102,6 +104,7 @@ namespace SpaceTrader.Util {
         }
 
         [DebuggerHidden]
+        [HideInCallstack]
         private static void RestoreState(T state, T fromState) {
             try {
                 state?.Restore(fromState);
@@ -111,6 +114,7 @@ namespace SpaceTrader.Util {
         }
 
         [DebuggerHidden]
+        [HideInCallstack]
         private static void SuspendState(T state, T toState) {
             try {
                 state?.Suspend(toState);
@@ -120,6 +124,7 @@ namespace SpaceTrader.Util {
         }
 
         [DebuggerHidden]
+        [HideInCallstack]
         private static void ExitState(T state, T toState) {
             try {
                 state?.Exit(toState);
