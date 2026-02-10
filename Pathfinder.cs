@@ -34,7 +34,7 @@ namespace SpaceTrader.Util {
         // initially, only the start node is known
         private readonly HashSet<TNode> openSet;
 
-        public Pathfinder() {
+        protected Pathfinder() {
             this.cameFrom = new Dictionary<TNode, TNode>();
 
             this.openSet = new HashSet<TNode>();

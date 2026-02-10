@@ -178,6 +178,55 @@ namespace SpaceTrader.Util {
             return Vector3.LerpUnclamped(startPos, endPos, fraction);
         }
 
+        public float ClosestTime(Vector3 position) {
+            if (this.positions.Length < 2) {
+                return 0f;
+            }
+
+            var minIndex = 0;
+
+            var minDistSqr = float.PositiveInfinity;
+            var minPrevDistSqr = float.PositiveInfinity;
+
+            var prevDistSqr = Vector3.SqrMagnitude(position - this.positions[0]);
+
+            for (var i = 1; i < this.positions.Length; i++) {
+                var splinePos = this.positions[i];
+
+                var distSqr = Vector3.SqrMagnitude(position - splinePos);
+                
+                if (distSqr <= minDistSqr && prevDistSqr <= minPrevDistSqr) {
+                    minIndex = i;
+                    minDistSqr = distSqr;
+                    minPrevDistSqr = prevDistSqr;
+                }
+
+                prevDistSqr = distSqr;
+            }
+
+            if (minIndex == 0) {
+                return 0f;
+            }
+
+            var splinePosA = this.positions[minIndex];
+            var splinePosB = this.positions[minIndex - 1];
+
+            if (splinePosA == splinePosB) {
+                return minIndex / (float)(this.positions.Length - 1);
+            }
+
+            var between = splinePosB - splinePosA;
+            var betweenLen = between.magnitude;
+            var betweenDir = between / betweenLen;
+
+            var relativePos = position - splinePosA;
+
+            var projected = Vector3.Project(relativePos, betweenDir);
+            var betweenTime = Mathf.Clamp01(projected.magnitude / betweenLen);
+
+            return (minIndex + betweenTime) / (this.positions.Length - 1);
+        }
+
         public static Spline FromSegments(
             Vector3 start,
             ReadOnlySpan<Segment> segments,

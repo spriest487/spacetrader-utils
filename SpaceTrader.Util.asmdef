@@ -4,9 +4,9 @@
     "references": [
         "Unity.Addressables",
         "Unity.ResourceManager",
-        "Unity.Multiplayer.MLAPI.Runtime",
         "Unity.Collections",
-        "Unity.Burst"
+        "Unity.Burst",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -20,11 +20,6 @@
             "name": "com.unity.addressables",
             "expression": "",
             "define": "UNITY_ADDRESSABLES"
-        },
-        {
-            "name": "com.unity.multiplayer.mlapi",
-            "expression": "",
-            "define": "UNITY_MLAPI"
         },
         {
             "name": "com.unity.collections",
